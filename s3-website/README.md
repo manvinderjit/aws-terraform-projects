@@ -16,3 +16,5 @@ Better to have separate roles for each distinct repo.
 1.C Add Roles for 
     a. Providing access to terraform to the state bucket
     b. Providing access to terraform via policies to create and manipulate desired resources
+
+1.D Add Env variables to GitHub
