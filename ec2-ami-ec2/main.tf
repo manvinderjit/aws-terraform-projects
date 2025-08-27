@@ -61,7 +61,7 @@ resource "aws_iam_role_policy_attachment" "attach_s3_access" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 }
 
-# 
+# attach the iam role to the ec2
 resource "aws_iam_instance_profile" "ec2_profile" {
   name = "ec2-ami-ec2-instance-profile"
   role = aws_iam_role.ec2_s3_role.name
