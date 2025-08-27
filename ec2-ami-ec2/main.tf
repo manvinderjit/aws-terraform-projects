@@ -8,7 +8,7 @@ provider "aws" {
     }
 }
 
-# Create a Security Group to allow access to ec2
+# Create a Security Group to control access to ec2
 resource "aws_security_group" "web_sg" {
   name        = "ec2-ami-ec2-web-sg"
   description = "Allow HTTP and SSH access"
