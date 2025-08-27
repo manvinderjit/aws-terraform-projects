@@ -77,7 +77,7 @@ resource "aws_instance" "web_server" {
   associate_public_ip_address = true
   user_data = <<-EOF
               #!/bin/bash
-              echo "I was created in the first ec2" > /home/ec2-user/creation-info.txt
+              echo "I was created in the first ec2 instance." > /home/ec2-user/creation-info.txt
               chown ec2-user:ec2-user /home/ec2-user/creation-info.txt
             EOF
 

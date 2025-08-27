@@ -64,7 +64,15 @@ jobs:
         id: plan
         run: terraform plan -out=tfplan -no-color
 
-      - name: Terraform Apply
-        id: apply
-        run: terraform apply -auto-approve tfplan
+      # - name: Terraform Apply
+      #   id: apply
+      #   run: terraform apply -auto-approve tfplan
+
+      - name: Debug
+        id: list
+        run: terraform state list
+
+      - name: Destroy
+        id: destroy
+        run: terraform destroy --auto-approve
       
