@@ -86,7 +86,7 @@ resource "aws_instance" "web_server" {
   }
 }
 
-# Create an ami from the deployed EC2
+# Create an ami from the deployed EC2 instance
 resource "aws_ami_from_instance" "web_server_ami" {
   name               = "ec2-ami-ec2-web-server-ami"
   source_instance_id = aws_instance.web_server.id
