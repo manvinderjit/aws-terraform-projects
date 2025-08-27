@@ -97,7 +97,7 @@ resource "aws_ami_from_instance" "web_server_ami" {
   }
 }
 
-# Use the ami to deploy another ec2
+# Use the created ami to deploy another ec2
 resource "aws_instance" "web_server_from_ami" {
   ami                    = aws_ami_from_instance.web_server_ami.id
   instance_type          = "t2.micro"  
