@@ -1,5 +1,6 @@
 provider "aws" {
     region = "us-east-2"
+    # Provide default tags to identify all resources
     default_tags {
       tags = {      
         ManagedBy = "GitAwsTerraformProjects"
