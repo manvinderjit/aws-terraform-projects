@@ -56,6 +56,9 @@ jobs:
       
       - name: Terraform Plan
         id: plan
+        env:
+          TF_VAR_db_username: ${{ secrets.AWS_RDS_USERNAME }}
+          TF_VAR_db_password: ${{ secrets.AWS_RDS_PASSWORD }}
         run: terraform plan -out=tfplan -no-color
 
       - name: Terraform Apply
