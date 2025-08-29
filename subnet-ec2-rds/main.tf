@@ -35,12 +35,25 @@ resource "aws_subnet" "public" {
   }
 }
 
-resource "aws_subnet" "private" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-east-2a"
+resource "aws_subnet" "private_a" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = "us-east-2a"
+  map_public_ip_on_launch = false
+
   tags = {
-    Name = "private-subnet-subnet-ec2-rds"
+    Name = "private-subnet-a-subnet-ec2-rds"
+  }
+}
+
+resource "aws_subnet" "private_b" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.3.0/24"
+  availability_zone       = "us-east-2b"
+  map_public_ip_on_launch = false
+
+  tags = {
+    Name = "private-subnet-b-subnet-ec2-rds"
   }
 }
 
@@ -141,7 +154,7 @@ resource "aws_instance" "web" {
 
 resource "aws_db_subnet_group" "db_subnet_group" {
   name       = "db-subnet-group-subnet-ec2-rds"
-  subnet_ids = [aws_subnet.private.id]
+  subnet_ids = [aws_subnet.private_a, aws_subnet.private_b]
 
   tags = {
     Name = "db-subnet-group"
