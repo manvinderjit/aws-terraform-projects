@@ -1,0 +1,64 @@
+name: Deploy an S3 Bucket
+
+on:
+  push:
+    paths:
+      - 'subnet-ec2-rds/**'
+    branches:
+      - project/subnet-ec2-rds 
+
+# These permissions are needed to interact with GitHub's OIDC Token endpoint.
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}  
+
+jobs:
+  deploy:        
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: subnet-ec2-rds
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.12.2"
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+        
+      - name: Terraform Init
+        id: init        
+        env:
+          AWS_TFSTATE_BUCKET_KEY_NAME : ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
+          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=subnet-ec2-rds/${AWS_TFSTATE_BUCKET_KEY_NAME}"
+        
+      - name: Terraform Validate
+        id: validate        
+        run: terraform validate -no-color
+      
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -out=tfplan -no-color
+
+      - name: Terraform Apply
+        id: apply
+        run: terraform apply -auto-approve tfplan
+      
