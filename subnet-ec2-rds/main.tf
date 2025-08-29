@@ -160,3 +160,24 @@ resource "aws_db_subnet_group" "db_subnet_group" {
     Name = "db-subnet-group"
   }
 }
+
+resource "aws_db_instance" "default" {
+  identifier              = "terraform-db"
+  allocated_storage       = 20
+  storage_type            = "gp2"
+  engine                  = "postgres"
+  engine_version          = "17.4"
+  instance_class          = "db.t4g.micro"    
+  username                = var.db_username
+  password                = var.db_password
+  db_subnet_group_name    = aws_db_subnet_group.db_subnet_group.name
+  vpc_security_group_ids  = [aws_security_group.rds_sg.id]
+  skip_final_snapshot     = true
+  publicly_accessible     = false
+  multi_az                = false
+  backup_retention_period = 0
+
+  tags = {
+    Name = "MyRDSInstance-subnet-ec2-rds"
+  }
+}

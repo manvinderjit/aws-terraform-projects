@@ -48,6 +48,8 @@ jobs:
         env:
           AWS_TFSTATE_BUCKET_KEY_NAME : ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
           AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+          TF_VAR_db_username: ${{ secrets.AWS_RDS_USERNAME }}
+          TF_VAR_db_password: ${{ secrets.AWS_RDS_PASSWORD }}
         run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=subnet-ec2-rds/${AWS_TFSTATE_BUCKET_KEY_NAME}"
         
       - name: Terraform Validate
