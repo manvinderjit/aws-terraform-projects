@@ -135,7 +135,7 @@ resource "aws_instance" "web" {
               yum install -y httpd
               systemctl enable httpd
               systemctl start httpd
-              echo "<h1>Hello from Terraform EC2</h1>" > /var/www/html/index.html
+              echo "<h1>Hello from Terraform EC2!</h1>" > /var/www/html/index.html
               EOF
 }
 

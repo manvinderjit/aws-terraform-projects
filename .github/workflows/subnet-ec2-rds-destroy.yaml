@@ -1,4 +1,4 @@
-name: Destroy The Infrastructure
+name: Destroy The VPC Infrastructure
 
 on:
   workflow_dispatch:  # Manual trigger from GitHub UI
