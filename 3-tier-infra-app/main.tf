@@ -174,7 +174,7 @@ resource "aws_security_group" "three_tier_infra_app_private_ec2_sg" {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = [aws_security_group.public_ec2_sg.id]
+    security_groups = [aws_security_group.three_tier_infra_app_public_ec2_sg.id]
   }
 
   egress {
