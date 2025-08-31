@@ -134,3 +134,53 @@ resource "aws_route_table_association" "three_tier_infra_app_private_association
   subnet_id      = aws_subnet.three_tier_infra_app_subnet_private_3.id
   route_table_id = aws_route_table.three_tier_infra_app_private_rt.id
 }
+
+resource "aws_security_group" "three_tier_infra_app_public_ec2_sg" {
+  name        = "three-tier-infra-app-public-ec2-sg"
+  description = "Allow SSH from the internet"
+  vpc_id      = aws_vpc.three_tier_infra_app_vpc.id
+
+  ingress {
+    description = "SSH from anywhere"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Http web traffic from anywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "three_tier_infra_app_private_ec2_sg" {
+  name        = "three-tier-infra-app-private-ec2-sg"
+  description = "Allow SSH from public EC2 only"
+  vpc_id      = aws_vpc.three_tier_infra_app_vpc.id
+
+  ingress {
+    description     = "SSH from public EC2"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.public_ec2_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
