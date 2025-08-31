@@ -135,6 +135,7 @@ resource "aws_route_table_association" "three_tier_infra_app_private_association
   route_table_id = aws_route_table.three_tier_infra_app_private_rt.id
 }
 
+# Security groups for ec2 instances
 resource "aws_security_group" "three_tier_infra_app_public_ec2_sg" {
   name        = "three-tier-infra-app-public-ec2-sg"
   description = "Allow SSH from the internet"
