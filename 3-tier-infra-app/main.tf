@@ -206,8 +206,8 @@ resource "aws_security_group" "three_tier_infra_app_private_ec2_sg" {
   }
 }
 
-resource "aws_lb" "three_tier_infra_app_webserver_alb" {
-  name               = "three-tier-infra-app-webserver-alb"
+resource "aws_lb" "three_tier_infra_app_ws_alb" {
+  name               = "three-tier-infra-app-ws-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups   = [aws_security_group.three_tier_infra_app_alb_sg.id]
