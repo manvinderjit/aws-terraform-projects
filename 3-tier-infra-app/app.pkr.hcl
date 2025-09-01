@@ -43,8 +43,9 @@ build {
       "sudo yum update -y",      
       "sudo yum install -y git java-21-amazon-corretto-devel wget unzip",
       "cd /home/ec2-user",      
+      "sudo mkdir /tmp/app"
       "git clone https://github.com/manvinderjit/react-springboot-test-app.git /tmp/app",
-      "mkdir -p /app",
+      "sudo mkdir -p /app",
       "cp -r /tmp/app/backend/* /app/",
       "cd /app",
       "chmod +x mvnw",
