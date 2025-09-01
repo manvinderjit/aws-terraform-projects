@@ -245,11 +245,6 @@ resource "aws_lb_listener" "app_listener" {
   }
 }
 
-resource "aws_placement_group" "app_pg" {
-  name     = "three-tier-infra-app-pg"
-  strategy = "cluster"
-}
-
 resource "aws_launch_template" "app_lt" {
   name_prefix   = "three-tier-infra-app-lt-"
   image_id      = var.ec2_ami_id
@@ -268,10 +263,6 @@ resource "aws_launch_template" "app_lt" {
     serve -s dist -l 3000 &
   EOF
   )
-
-  placement {
-    group_name = aws_placement_group.app_pg.name
-  }
 }
 
 resource "aws_autoscaling_group" "app_asg" {
