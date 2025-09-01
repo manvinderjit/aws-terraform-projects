@@ -58,7 +58,7 @@ jobs:
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: |
           packer init .
-          packer build -var "aws_region=us-east-2" -var "ami_name=my-app-ami" app.pkr.hcl
+          packer build -var "aws_region=us-east-2" -var "ami_name=three-tier-ami-app" app.pkr.hcl
 
       - name: Get AMI ID from manifest
         id: get_ami_id
@@ -72,36 +72,36 @@ jobs:
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: echo "AMI ID is ${{ env.AMI_ID }}"
       
-      - name: Terraform Format
-        id: fmt
-        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-        run: terraform fmt -check
-        continue-on-error: true
+      # - name: Terraform Format
+      #   id: fmt
+      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+      #   run: terraform fmt -check
+      #   continue-on-error: true
         
-      - name: Terraform Init
-        id: init        
-        env:
-          AWS_TFSTATE_BUCKET_KEY_NAME : ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
-          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
-        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=3-tier-infra-app/${AWS_TFSTATE_BUCKET_KEY_NAME}" -backend-config="region=${AWS_TFSTATE_REGION}" -backend-config="dynamodb_table=${AWS_TFSTATE_LOCK_TABLE_NAME}"
+      # - name: Terraform Init
+      #   id: init        
+      #   env:
+      #     AWS_TFSTATE_BUCKET_KEY_NAME : ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
+      #     AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+      #   run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=3-tier-infra-app/${AWS_TFSTATE_BUCKET_KEY_NAME}" -backend-config="region=${AWS_TFSTATE_REGION}" -backend-config="dynamodb_table=${AWS_TFSTATE_LOCK_TABLE_NAME}"
         
-      - name: Terraform Validate
-        id: validate
-        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-        run: terraform validate -no-color
+      # - name: Terraform Validate
+      #   id: validate
+      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+      #   run: terraform validate -no-color
       
-      - name: Terraform Plan
-        id: plan
-        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-        run: terraform plan -out=tfplan -no-color -var="ec2_ami_id=${{ env.AMI_ID }}"
+      # - name: Terraform Plan
+      #   id: plan
+      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+      #   run: terraform plan -out=tfplan -no-color -var="ec2_ami_id=${{ env.AMI_ID }}"
 
-      - name: Terraform Apply
-        id: apply
-        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-        run: terraform apply -auto-approve tfplan
+      # - name: Terraform Apply
+      #   id: apply
+      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+      #   run: terraform apply -auto-approve tfplan
 
-      - name: Terraform Destroy
-        id: destroy
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}
-        run: terraform destroy -auto-approve
+      # - name: Terraform Destroy
+      #   id: destroy
+      #   if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}
+      #   run: terraform destroy -auto-approve
       

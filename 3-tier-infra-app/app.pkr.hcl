@@ -14,7 +14,7 @@ variable "aws_region" {
 
 variable "ami_name" {
   type    = string
-  default = "my-app-ami"
+  default = "three-tier-ami-app"
 }
 
 source "amazon-ebs" "app" {
@@ -39,24 +39,27 @@ build {
 
   provisioner "shell" {
     inline = [
+
       "sudo yum update -y",
-      "sudo yum install -y git nodejs npm",
-      "cd /home/ec2-user",
-      "git clone https://github.com/manvinderjit/2023-TOP-Project-Shopping-Cart.git app",
-      "cd app",
-      "npm install",
-      "VITE_API_BASE_URL=\"https://ia.manvinderjit.com\" npm run build",
-      "sudo npm install -g serve",
-
-      # Install Nginx
-      "sudo yum install -y nginx",
+      "sudo yum install -y git wget unzip",
+      "sudo yum install -y java-21-amazon-corretto-devel",
+      "wget https://downloads.apache.org/maven/maven-3/3.9.4/binaries/apache-maven-3.9.4-bin.zip -P /tmp",
+      "sudo unzip /tmp/apache-maven-3.9.4-bin.zip -d /opt",
+      "sudo ln -s /opt/apache-maven-3.9.4 /opt/maven",
+      "echo 'export MAVEN_HOME=/opt/maven' | sudo tee /etc/profile.d/maven.sh",
+      "echo 'export PATH=$MAVEN_HOME/bin:$PATH' | sudo tee -a /etc/profile.d/maven.sh",
+      "sudo chmod +x /etc/profile.d/maven.sh",
       
-      # Create nginx config
-      "echo 'server { listen 80; location / { proxy_pass http://localhost:3000; proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection \"upgrade\"; proxy_set_header Host $host; proxy_cache_bypass $http_upgrade; } }' | sudo tee /etc/nginx/conf.d/app.conf",
+      "git clone https://github.com/manvinderjit/react-springboot-test-app.git /tmp/app",
+      "mkdir -p /app",
+      "cp -r /tmp/app/backend/* /app/",
+      
+      # Run mvn build in a single bash session with Maven env loaded
+      "bash -c 'source /etc/profile.d/maven.sh && cd /app && mvn clean package -DskipTests'",
+      
+      "rm -rf /tmp/apache-maven-3.9.4-bin.zip /tmp/app",
 
-      # Enable and start nginx service
-      "sudo systemctl enable nginx",
-      "sudo systemctl start nginx",
+      # The jar file will be in /app/target/*.jar               
     ]
   }
 
