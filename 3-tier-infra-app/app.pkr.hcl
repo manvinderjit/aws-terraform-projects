@@ -46,8 +46,7 @@ build {
       "cd app",
       "npm install",
       "VITE_API_BASE_URL=\"https://ia.manvinderjit.com/\" npm run build",
-      "sudo npm install -g serve",
-      "serve -s dist &"
+      "sudo npm install -g serve",      
     ]
   }
 
