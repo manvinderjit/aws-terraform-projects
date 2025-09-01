@@ -218,8 +218,8 @@ resource "aws_lb" "three_tier_infra_app_ws_alb" {
   ]
 }
 
-resource "aws_lb_target_group" "three_tier_infra_app_webserver_tg" {
-  name     = "three-tier-infra-app-web-server-tg"
+resource "aws_lb_target_group" "three_tier_infra_app_ws_tg" {
+  name     = "three-tier-infra-app-ws-tg"
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.three_tier_infra_app_vpc.id
@@ -235,13 +235,13 @@ resource "aws_lb_target_group" "three_tier_infra_app_webserver_tg" {
 }
 
 resource "aws_lb_listener" "app_listener" {
-  load_balancer_arn = aws_lb.three_tier_infra_app_webserver_alb.arn
+  load_balancer_arn = aws_lb.three_tier_infra_app_ws_alb.arn
   port              = 80
   protocol          = "HTTP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.three_tier_infra_app_webserver_tg.arn
+    target_group_arn = aws_lb_target_group.three_tier_infra_app_ws_tg.arn
   }
 }
 
@@ -289,7 +289,7 @@ resource "aws_autoscaling_group" "app_asg" {
     aws_subnet.three_tier_infra_app_subnet_public_3.id,
   ]
 
-  target_group_arns = [aws_lb_target_group.three_tier_infra_app_webserver_tg.arn]
+  target_group_arns = [aws_lb_target_group.three_tier_infra_app_ws_tg.arn]
 
   health_check_type         = "ELB"
   health_check_grace_period = 300
