@@ -135,10 +135,31 @@ resource "aws_route_table_association" "three_tier_infra_app_private_association
   route_table_id = aws_route_table.three_tier_infra_app_private_rt.id
 }
 
+# Security groups for alb
+resource "aws_security_group" "three_tier_infra_app_alb_sg" {
+  name        = "three-tier-infra-app-alb-sg"
+  description = "Allow HTTP inbound from anywhere"
+  vpc_id      = aws_vpc.three_tier_infra_app_vpc.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 # Security groups for ec2 instances
-resource "aws_security_group" "three_tier_infra_app_public_ec2_sg" {
-  name        = "three-tier-infra-app-public-ec2-sg"
-  description = "Allow SSH from the internet"
+resource "aws_security_group" "three_tier_infra_appserver_ec2_sg" {
+  name        = "three-tier-infra-appserver-ec2-sg"
+  description = "Allow SSH from the internet and local traffic on port 3000"
   vpc_id      = aws_vpc.three_tier_infra_app_vpc.id
 
   ingress {
@@ -149,12 +170,11 @@ resource "aws_security_group" "three_tier_infra_app_public_ec2_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    description = "Http web traffic from anywhere"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+   ingress {
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.three_tier_infra_app_alb_sg.id]
   }
 
   egress {
@@ -175,7 +195,7 @@ resource "aws_security_group" "three_tier_infra_app_private_ec2_sg" {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = [aws_security_group.three_tier_infra_app_public_ec2_sg.id]
+    security_groups = [aws_security_group.three_tier_infra_appserver_ec2_sg.id]
   }
 
   egress {
@@ -186,18 +206,113 @@ resource "aws_security_group" "three_tier_infra_app_private_ec2_sg" {
   }
 }
 
-# Launc EC2 in public subnet
-resource "aws_instance" "public_ec2" {
-  ami                         = var.ec2_ami_id
-  instance_type               = var.instance_type
-  subnet_id                   = aws_subnet.three_tier_infra_app_subnet_public_1.id
-  vpc_security_group_ids      = [aws_security_group.three_tier_infra_app_public_ec2_sg.id]
-  associate_public_ip_address = true
-  key_name                    = var.ec2_key_name
+resource "aws_lb" "three_tier_infra_app_webserver_alb" {
+  name               = "three-tier-infra-app-webserver-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups   = [aws_security_group.three_tier_infra_app_alb_sg.id]
+  subnets            = [
+    aws_subnet.three_tier_infra_app_subnet_public_1.id,
+    aws_subnet.three_tier_infra_app_subnet_public_2.id,
+    aws_subnet.three_tier_infra_app_subnet_public_3.id,
+  ]
+}
 
-  user_data = <<-EOF
+resource "aws_lb_target_group" "three_tier_infra_app_webserver_tg" {
+  name     = "three-tier-infra-app-web-server-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.three_tier_infra_app_vpc.id
+
+  health_check {
+    path                = "/"
+    protocol            = "HTTP"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
+}
+
+resource "aws_lb_listener" "app_listener" {
+  load_balancer_arn = aws_lb.three_tier_infra_app_webserver_alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.three_tier_infra_app_webserver_tg.arn
+  }
+}
+
+resource "aws_placement_group" "app_pg" {
+  name     = "three-tier-infra-app-pg"
+  strategy = "cluster"
+}
+
+resource "aws_launch_template" "app_lt" {
+  name_prefix   = "three-tier-infra-app-lt-"
+  image_id      = var.ec2_ami_id
+  instance_type = var.instance_type
+  key_name      = var.ec2_key_name
+
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups = [aws_security_group.three_tier_infra_appserver_ec2_sg.id]
+    subnet_id                   = null # subnet is specified at ASG level
+  }
+
+  user_data = base64encode(<<-EOF
     #!/bin/bash
     cd /home/ec2-user/app
     serve -s dist -l 3000 &
   EOF
+  )
+
+  placement {
+    group_name = aws_placement_group.app_pg.name
+  }
 }
+
+resource "aws_autoscaling_group" "app_asg" {
+  name                      = "three-tier-infra-app-asg"
+  max_size                  = 3
+  min_size                  = 2
+  desired_capacity          = 2
+  launch_template {
+    id      = aws_launch_template.app_lt.id
+    version = "$Latest"
+  }
+  vpc_zone_identifier       = [
+    aws_subnet.three_tier_infra_app_subnet_public_1.id,
+    aws_subnet.three_tier_infra_app_subnet_public_2.id,
+    aws_subnet.three_tier_infra_app_subnet_public_3.id,
+  ]
+
+  target_group_arns = [aws_lb_target_group.three_tier_infra_app_webserver_tg.arn]
+
+  health_check_type         = "ELB"
+  health_check_grace_period = 300
+
+  tag {
+    key                 = "Name"
+    value               = "three-tier-infra-app-asg-instance"
+    propagate_at_launch = true
+  }
+}
+
+# Launc EC2 in public subnet
+# resource "aws_instance" "public_ec2" {
+#   ami                         = var.ec2_ami_id
+#   instance_type               = var.instance_type
+#   subnet_id                   = aws_subnet.three_tier_infra_app_subnet_public_1.id
+#   vpc_security_group_ids      = [aws_security_group.three_tier_infra_app_public_ec2_sg.id]
+#   associate_public_ip_address = true
+#   key_name                    = var.ec2_key_name
+
+#   user_data = <<-EOF
+#     #!/bin/bash
+#     cd /home/ec2-user/app
+#     serve -s dist -l 3000 &
+#   EOF
+# }
