@@ -31,7 +31,7 @@ source "amazon-ebs" "app" {
 
   instance_type          = "t2.nano"
   ssh_username           = "ec2-user"
-  ami_name               = clean_resource_name("${var.ami_name}-${timestamp()}")
+  ami_name = "${var.ami_name}-${formatdate("YYYYMMDDhhmmss", timestamp())}"
 }
 
 build {
