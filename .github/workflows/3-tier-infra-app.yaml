@@ -55,18 +55,21 @@ jobs:
           terraform_version: "1.12.2"
       
       - name: Build AMI
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: |
           packer init .
           packer build -var "aws_region=us-east-2" -var "ami_name=my-app-ami" app.pkr.hcl
 
       - name: Get AMI ID from manifest
         id: get_ami_id
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: |
           AMI_ID=$(jq -r '.builds[0].artifact_id' packer-manifest.json | cut -d':' -f2)
           echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
           echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
 
       - name: Print AMI ID
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: echo "AMI ID is ${{ env.AMI_ID }}"
       
       - name: Terraform Format
