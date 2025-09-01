@@ -186,6 +186,7 @@ resource "aws_security_group" "three_tier_infra_app_private_ec2_sg" {
   }
 }
 
+# Launc EC2 in public subnet
 resource "aws_instance" "public_ec2" {
   ami                         = var.ec2_ami_id
   instance_type               = var.instance_type
