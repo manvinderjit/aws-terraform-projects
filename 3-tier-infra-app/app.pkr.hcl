@@ -47,6 +47,10 @@ build {
       "npm install",
       "VITE_API_BASE_URL=\"https://ia.manvinderjit.com\" npm run build",
       "sudo npm install -g serve",
+
+      # Install Nginx
+      "sudo yum install -y nginx",
+      
       # Create nginx config
       "echo 'server { listen 80; location / { proxy_pass http://localhost:3000; proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection \"upgrade\"; proxy_set_header Host $host; proxy_cache_bypass $http_upgrade; } }' | sudo tee /etc/nginx/conf.d/app.conf",
 
