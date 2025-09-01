@@ -185,3 +185,18 @@ resource "aws_security_group" "three_tier_infra_app_private_ec2_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+resource "aws_instance" "public_ec2" {
+  ami                         = var.ec2_ami_id
+  instance_type               = var.instance_type
+  subnet_id                   = aws_subnet.three_tier_infra_app_subnet_public_1.id
+  vpc_security_group_ids      = [three_tier_infra_app_public_ec2_sg.id]
+  associate_public_ip_address = true
+  key_name                    = var.ec2_key_name
+
+  user_data = <<-EOF
+    #!/bin/bash
+    cd /home/ec2-user/app
+    nohup serve -s dist -l 0.0.0.0:3000 > /home/ec2-user/serve.log 2>&1 &
+  EOF
+}

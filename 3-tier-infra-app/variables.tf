@@ -3,3 +3,20 @@ variable "aws_region" {
   type        = string
   default     = "us-east-2"
 }
+
+variable "ec2_key_name" {
+  description = "Name of EC2 key pair"
+  type        = string
+  default     = "aws-labs-becloudready"
+}
+
+variable "instance_type" {
+  description = "type of ec2 instance to launch"
+  type        = string
+  default     = "t2.micro"
+}
+
+variable "ec2_ami_id" {
+  description = "ami to be used for launching ec2"
+  type        = string
+}

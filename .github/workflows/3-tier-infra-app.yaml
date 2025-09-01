@@ -93,7 +93,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-        run: terraform plan -out=tfplan -no-color
+        run: terraform plan -out=tfplan -no-color -var="ami_id=${{ env.AMI_ID }}"
 
       - name: Terraform Apply
         id: apply
