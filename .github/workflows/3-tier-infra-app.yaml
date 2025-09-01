@@ -43,12 +43,32 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}
           aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@v2
+        with:
+          version: '1.10.0'
       
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.12.2"
+      
+      - name: Build AMI
+        run: |
+          packer init packer
+          packer build -var "aws_region=us-east-2" "ami_name=my-app-ami" app.pkr.hcl           
 
+      - name: Get AMI ID from manifest
+        id: get_ami_id
+        run: |
+          AMI_ID=$(jq -r '.builds[0].artifact_id' packer/packer-manifest.json | cut -d':' -f2)
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
+
+      - name: Print AMI ID
+        run: echo "AMI ID is ${{ env.AMI_ID }}"
+      
       - name: Terraform Format
         id: fmt
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
