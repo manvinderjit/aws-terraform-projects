@@ -6,7 +6,7 @@ source "amazon-ebs" "app" {
       virtualization-type = "hvm"
       root-device-type    = "ebs"
     }
-    owners      = ["137112412989"] # Amazon as official owner
+    owners      = ["137112412989"] # Amazon as the official owner
     most_recent = true
   }
 
