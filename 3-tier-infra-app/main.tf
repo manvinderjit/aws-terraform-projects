@@ -198,6 +198,6 @@ resource "aws_instance" "public_ec2" {
   user_data = <<-EOF
     #!/bin/bash
     cd /home/ec2-user/app
-    nohup serve -s dist -l 0.0.0.0:3000 > /home/ec2-user/serve.log 2>&1 &
+    serve -s dist -l 3000 &
   EOF
 }
