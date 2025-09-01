@@ -1,3 +1,22 @@
+packer {
+  required_plugins {
+    amazon = {
+      version = "latest"
+      source  = "github.com/hashicorp/amazon"
+    }
+  }
+}
+
+variable "aws_region" {
+  type    = string
+  default = "us-east-2"
+}
+
+variable "ami_name" {
+  type    = string
+  default = "my-app-ami"
+}
+
 source "amazon-ebs" "app" {
   region                  = var.aws_region
   source_ami_filter {
