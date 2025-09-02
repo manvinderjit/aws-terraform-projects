@@ -12,7 +12,7 @@
 #   default = "us-east-2"
 # }
 
-variable "ami_name_fe" {
+variable "ami_name_web" {
   type    = string
   default = "three-tier-ami-web"
 }
@@ -35,7 +35,7 @@ source "amazon-ebs" "web" {
 
   instance_type          = "t2.micro"
   ssh_username           = "ec2-user"
-  ami_name = "${var.ami_name_fe}-${formatdate("YYYYMMDDhhmmss", timestamp())}"
+  ami_name = "${var.ami_name_web}-${formatdate("YYYYMMDDhhmmss", timestamp())}"
 }
 
 build {

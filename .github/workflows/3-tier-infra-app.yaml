@@ -182,7 +182,7 @@ jobs:
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: |
           packer init .
-          packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_web=three-tier-ami-fe-web" -var "backend_alb_dns=${{ env.PRIVATE_ALB_DNS }}" web.pkr.hcl
+          packer build -var "ami_name_web=three-tier-ami-fe-web" -var "backend_alb_dns=${{ env.PRIVATE_ALB_DNS }}" web.pkr.hcl
 
       - name: Get Frontend AMI ID
         working-directory: 3-tier-infra-app
