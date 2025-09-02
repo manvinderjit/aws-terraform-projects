@@ -16,3 +16,7 @@ output "private_ec2_security_group_id" {
 output "api_target_group_arn" {
   value = aws_lb_target_group.api_tg.arn
 }
+
+output "private_alb_dns" {
+  value = aws_lb.three_tier_infra_app_api_alb.dns_name
+}
