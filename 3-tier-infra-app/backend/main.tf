@@ -20,7 +20,6 @@ data "terraform_remote_state" "base_infra" {
   }
 }
 
-
 resource "aws_launch_template" "backend_lt" {
   name_prefix   = "three-tier-backend-lt"
   image_id      = var.ec2_ami_id_backend
