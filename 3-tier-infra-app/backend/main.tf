@@ -37,13 +37,6 @@ resource "aws_launch_template" "backend_lt" {
               nohup java -jar backend-0.0.1-SNAPSHOT.jar > /dev/null 2>&1 &
               EOF
             )
-
-  tag_specifications {
-    resource_type = "instance"
-    tags = {
-      Name = "three-tier-backend-ec2"
-    }
-  }
 }
 
 resource "aws_autoscaling_group" "backend_asg" {
@@ -55,8 +48,7 @@ resource "aws_autoscaling_group" "backend_asg" {
   vpc_zone_identifier = data.terraform_remote_state.base_infra.outputs.private_subnet_ids
 
   launch_template {
-    id      = aws_launch_template.backend_lt.id
-    version = "$Latest"
+    id      = aws_launch_template.backend_lt.id    
   }
 
   target_group_arns = [
