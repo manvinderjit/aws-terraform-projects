@@ -64,7 +64,7 @@ build {
 
   provisioner "shell" {
     inline = [
-      "echo 'export DB_URL=${var.rds_endpoint}' | sudo tee -a /etc/profile.d/rds.sh"
+      "echo 'export DB_URL=${var.rds_endpoint}' | sudo tee -a /etc/profile.d/rds.sh",
       "sudo yum update -y",      
       "sudo yum install -y git java-21-amazon-corretto-devel wget unzip",
       "cd /home/ec2-user",      
