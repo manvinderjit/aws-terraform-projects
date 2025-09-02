@@ -19,12 +19,13 @@ variable "instance_type" {
 variable "ec2_ami_id_frontend" {
   description = "ami to be used for launching ec2"
   type        = string
+  default     = "ami-0fdfba26e5a9e81e6"
 }
 
-variable "rds_endpoint" {
-  description = "RDS endpoint for backend to connect to"
-  type        = string
-}
+# variable "rds_endpoint" {
+#   description = "RDS endpoint for backend to connect to"
+#   type        = string
+# }
 
 # variable "db_username" {
 #   description = "RDS database username"
