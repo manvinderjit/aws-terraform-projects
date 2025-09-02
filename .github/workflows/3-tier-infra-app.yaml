@@ -89,10 +89,11 @@ jobs:
           version: '1.10.0'
 
       - name: Build Backend AMI
+        working-directory: 3-tier-infra-app
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: |
           packer init .
-          packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_app=three-tier-ami-be-app" -var "rds_endpoint=${{ env.RDS_ENDPOINT }}" ../app.pkr.hcl
+          packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_app=three-tier-ami-be-app" -var "rds_endpoint=${{ env.RDS_ENDPOINT }}" app.pkr.hcl
 
       - name: Get Backend AMI ID
         id: get_backend_ami_id

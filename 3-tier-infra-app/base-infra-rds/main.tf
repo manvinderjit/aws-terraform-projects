@@ -474,6 +474,3 @@ resource "aws_lb_listener" "api_listener" {
 #     propagate_at_launch = true
 #   }
 # }
-
-
-
