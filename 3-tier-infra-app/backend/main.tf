@@ -14,7 +14,7 @@ data "terraform_remote_state" "base_infra" {
 
   config = {
     bucket         = var.tfstate_bucket
-    key            = var.base_tfstate_key  # exact key for base infra tfstate
+    key            = var.base_tfstate_key
     region         = "us-east-1"    
   }
 }
