@@ -55,10 +55,10 @@ output "frontend_target_group_arn" {
   value       = aws_lb_target_group.three_tier_infra_app_ws_tg.arn
 }
 
-output "private_ec2_security_group_id" {
-  value = aws_security_group.three_tier_infra_app_private_ec2_sg.id
-}
-
 output "api_target_group_arn" {
   value = aws_lb_target_group.api_tg.arn
+}
+
+output "private_alb_dns" {
+  value = aws_lb.three_tier_infra_app_api_alb.dns_name
 }
