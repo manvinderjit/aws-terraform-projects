@@ -43,14 +43,14 @@ build {
       "sudo yum update -y",      
       "sudo yum install -y git java-21-amazon-corretto-devel wget unzip",
       "cd /home/ec2-user",      
-      "sudo mkdir /tmp/app",
-      "sudo git clone https://github.com/manvinderjit/react-springboot-test-app.git /tmp/app",
-      "sudo mkdir -p /app",
-      "sudo cp -r /tmp/app/backend/* /app/",
-      "cd /app",
+      "sudo mkdir tmp tmp/app",
+      "sudo git clone https://github.com/manvinderjit/react-springboot-test-app.git tmp/app",
+      "sudo mkdir -p app",
+      "sudo cp -r tmp/app/backend/. app/",
+      "cd app",
       "sudo chmod +x mvnw",
       "sudo ./mvnw clean package -DskipTests",
-      "sudo rm -rf /tmp/app"
+      "sudo rm -rf /home/ec2-user/tmp/app/"
 
       # The jar file will be in /app/target/*.jar               
     ]
