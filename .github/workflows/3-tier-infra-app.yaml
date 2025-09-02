@@ -96,12 +96,20 @@ jobs:
           packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_app=three-tier-ami-be-app" -var "rds_endpoint=${{ env.RDS_ENDPOINT }}" app.pkr.hcl
 
       - name: Get Backend AMI ID
+        working-directory: 3-tier-infra-app
         id: get_backend_ami_id
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: |
           AMI_ID_BACKEND=$(jq -r '.builds[0].artifact_id' packer-manifest-backend.json | cut -d':' -f2)
           echo "AMI_ID_BACKEND=$AMI_ID_BACKEND" >> $GITHUB_ENV
           echo "ami_id_backend=$AMI_ID_BACKEND" >> $GITHUB_OUTPUT
+  
+  deploy-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: 3-tier-infra-app/backend
 
       # - name: Build Frontend AMI
       #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
