@@ -103,13 +103,6 @@ jobs:
           AMI_ID_BACKEND=$(jq -r '.builds[0].artifact_id' packer-manifest-backend.json | cut -d':' -f2)
           echo "AMI_ID_BACKEND=$AMI_ID_BACKEND" >> $GITHUB_ENV
           echo "ami_id_backend=$AMI_ID_BACKEND" >> $GITHUB_OUTPUT
-  
-  deploy-backend:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: 3-tier-infra-app/backend
 
       # - name: Build Frontend AMI
       #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}

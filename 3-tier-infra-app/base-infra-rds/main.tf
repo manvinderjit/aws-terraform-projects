@@ -352,7 +352,7 @@ resource "aws_lb_listener" "app_listener" {
   }
 }
 
-# Internal API ALB
+# Internal backend API ALB
 resource "aws_lb" "three_tier_infra_app_api_alb" {
   name               = "three-tier-infra-app-api-alb"
   internal           = true
