@@ -22,7 +22,8 @@ data "terraform_remote_state" "base_infra" {
 resource "aws_launch_template" "frontend_lt" {
   name_prefix   = "three-tier-frontend-lt"
   # image_id      = var.ec2_ami_id_frontend
-  image_id      = "ami-098ec626d18959182"
+  # image_id      = "ami-098ec626d18959182"
+  image_id = "ami-00eb9487a67ead333"
   instance_type = var.instance_type
   key_name      = var.ec2_key_name
 
