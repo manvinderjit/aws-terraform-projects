@@ -21,7 +21,7 @@ data "terraform_remote_state" "base_infra" {
 
 resource "aws_launch_template" "frontend_lt" {
   name_prefix   = "three-tier-frontend-lt"
-  image_id      = "ami-0fdfba26e5a9e81e6"
+  image_id      = var.ec2_ami_id_frontend
   instance_type = var.instance_type
   key_name      = var.ec2_key_name
 
@@ -31,8 +31,8 @@ resource "aws_launch_template" "frontend_lt" {
 
   user_data = base64encode(<<-EOF
               #!/bin/bash
-              systemctl start nginx
-              systemctl enable nginx
+              cd /home/ec2-user/web
+              sudo nohup serve -s dist -l 3000 > /dev/null 2>&1 &
               EOF
             )
 }

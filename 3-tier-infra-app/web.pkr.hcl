@@ -44,23 +44,23 @@ build {
   provisioner "shell" {
     inline = [
       "sudo yum update -y",
-      "sudo yum install -y git nodejs npm nginx",
+      "sudo yum install -y git nodejs npm",
       "cd /home/ec2-user",
       "sudo mkdir tmpf tmpf/web",
       "sudo git clone https://github.com/manvinderjit/react-springboot-test-app.git tmpf/web",
       "sudo mkdir -p web",
       "sudo cp -r tmpf/web/frontend/. web/",
       "cd web",
-      "sudo npm install",
-      "sudo VITE_API_BASE_URL=\"http://${var.backend_alb_dns}\" npm run build",
+      "sudo npm install",      
       "sudo npm install -g serve",
+      "sudo VITE_API_BASE_URL=\"http://${var.backend_alb_dns}\" npm run build",
       
-      # Create nginx config
-      "echo 'server { listen 80; location / { proxy_pass http://localhost:3000; proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection \"upgrade\"; proxy_set_header Host $host; proxy_cache_bypass $http_upgrade; } }' | sudo tee /etc/nginx/conf.d/app.conf",
+      # # Create nginx config
+      # "echo 'server { listen 80; location / { proxy_pass http://localhost:3000; proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection \"upgrade\"; proxy_set_header Host $host; proxy_cache_bypass $http_upgrade; } }' | sudo tee /etc/nginx/conf.d/app.conf",
 
-      # Enable and start nginx service
-      "sudo systemctl enable nginx",
-      "sudo systemctl start nginx",
+      # # Enable and start nginx service
+      # "sudo systemctl enable nginx",
+      # "sudo systemctl start nginx",
       "sudo rm -rf /home/ec2-user/tmpf"
     ]
   }
