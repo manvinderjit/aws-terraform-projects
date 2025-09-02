@@ -17,6 +17,10 @@ variable "ami_name_app" {
   default = "three-tier-ami-be-app"
 }
 
+variable "rds_db_name" {
+  type    = string  
+}
+
 variable "rds_endpoint" {
   type = string
 }
@@ -46,7 +50,7 @@ build {
 
   provisioner "shell" {
     inline = [
-      "echo 'export DB_URL=${var.rds_endpoint}' | sudo tee -a /etc/profile.d/rds.sh",
+      "echo 'export DB_URL=jdbc:mysql://${var.rds_endpoint}/${var.rds_db_name}?createDatabaseIfNotExist=true' | sudo tee -a /etc/profile.d/rds.sh",
       "sudo yum update -y",      
       "sudo yum install -y git java-21-amazon-corretto-devel wget unzip",
       "cd /home/ec2-user",      

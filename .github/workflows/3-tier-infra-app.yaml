@@ -111,7 +111,7 @@ jobs:
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: |
           packer init .
-          packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_app=three-tier-ami-be-app" -var "rds_endpoint=${{ env.RDS_ENDPOINT }}" app.pkr.hcl
+          packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_app=three-tier-ami-be-app" -var "rds_endpoint=${{ env.RDS_ENDPOINT }}"  -var "rds_db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" app.pkr.hcl
 
       - name: Get Backend AMI ID
         working-directory: 3-tier-infra-app
@@ -127,24 +127,24 @@ jobs:
         run: |
           echo "Backend AMI ID: ${{ env.AMI_ID_BACKEND }}"
 
-      - name: Wait for AMI availability
-        working-directory: 3-tier-infra-app
-        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-        run: |
-          echo "Waiting for AMI ${{ env.AMI_ID_BACKEND }} to be available..."
-          for i in {1..10}; do
-            state=$(aws ec2 describe-images --image-ids ${{ env.AMI_ID_BACKEND }} --region ${{ env.AWS_REGION }} --query 'Images[0].State' --output text)
-            echo "Attempt $i: AMI state is $state"
-            if [ "$state" == "available" ]; then
-              echo "AMI is available"
-              exit 0
-            fi
-            sleep 30
-          done
-          echo "Timeout waiting for AMI to be available"
-          exit 1
-        env:
-          AWS_REGION: ${{ env.AWS_REGION }}
+      # - name: Wait for AMI availability
+      #   working-directory: 3-tier-infra-app
+      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+      #   run: |
+      #     echo "Waiting for AMI ${{ env.AMI_ID_BACKEND }} to be available..."
+      #     for i in {1..10}; do
+      #       state=$(aws ec2 describe-images --image-ids ${{ env.AMI_ID_BACKEND }} --region ${{ env.AWS_REGION }} --query 'Images[0].State' --output text)
+      #       echo "Attempt $i: AMI state is $state"
+      #       if [ "$state" == "available" ]; then
+      #         echo "AMI is available"
+      #         exit 0
+      #       fi
+      #       sleep 30
+      #     done
+      #     echo "Timeout waiting for AMI to be available"
+      #     exit 1
+      #   env:
+      #     AWS_REGION: ${{ env.AWS_REGION }}
 
       - name: Terraform Init        
         id: init-backend
