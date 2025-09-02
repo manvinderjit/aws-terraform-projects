@@ -177,27 +177,21 @@ jobs:
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: terraform apply -auto-approve backendtfplan
 
-      # - name: Terraform Apply
-      #   id: apply-backend
-      #   working-directory: 3-tier-infra-app/backend
-      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-      #   run: terraform apply -auto-approve backendtfplan
+      - name: Build Frontend AMI
+        working-directory: 3-tier-infra-app
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: |
+          packer init .
+          packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_web=three-tier-ami-fe-web" -var "backend_alb_dns=${{ env.PRIVATE_ALB_DNS }}" web.pkr.hcl
 
-      # - name: Build Frontend AMI
-      #   working-directory: 3-tier-infra-app
-      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-      #   run: |
-      #     packer init .
-      #     packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_web=three-tier-ami-fe-web" -var "backend_alb_dns=${{ env.PRIVATE_ALB_DNS }}" web.pkr.hcl
-
-      # - name: Get Frontend AMI ID
-      #   working-directory: 3-tier-infra-app
-      #   id: get_frontend_ami_id
-      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-      #   run: |
-      #     AMI_ID_FRONTEND=$(jq -r '.builds[0].artifact_id' packer-manifest-frontend.json | cut -d':' -f2)
-      #     echo "AMI_ID_FRONTEND=$AMI_ID_FRONTEND" >> $GITHUB_ENV
-      #     echo "ami_id_frontend=$AMI_ID_FRONTEND" >> $GITHUB_OUTPUT
+      - name: Get Frontend AMI ID
+        working-directory: 3-tier-infra-app
+        id: get_frontend_ami_id
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: |
+          AMI_ID_FRONTEND=$(jq -r '.builds[0].artifact_id' packer-manifest-frontend.json | cut -d':' -f2)
+          echo "AMI_ID_FRONTEND=$AMI_ID_FRONTEND" >> $GITHUB_ENV
+          echo "ami_id_frontend=$AMI_ID_FRONTEND" >> $GITHUB_OUTPUT
 
   
   # deploy-backend:
