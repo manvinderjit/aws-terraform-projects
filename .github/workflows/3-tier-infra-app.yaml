@@ -101,31 +101,31 @@ jobs:
         env:
           PRIVATE_ALB_DNS: ${{ env.PRIVATE_ALB_DNS }}
 
-      # - name: Setup Packer
-      #   uses: hashicorp/setup-packer@v2
-      #   with:
-      #     version: '1.10.0'
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@v2
+        with:
+          version: '1.10.0'
 
-      # - name: Build Backend AMI
-      #   working-directory: 3-tier-infra-app
-      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-      #   run: |
-      #     packer init .
-      #     packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_app=three-tier-ami-be-app" -var "rds_endpoint=${{ env.RDS_ENDPOINT }}"  -var "rds_db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" app.pkr.hcl
+      - name: Build Backend AMI
+        working-directory: 3-tier-infra-app
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: |
+          packer init .
+          packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_app=three-tier-ami-be-app" -var "rds_endpoint=${{ env.RDS_ENDPOINT }}"  -var "rds_db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" app.pkr.hcl
 
-      # - name: Get Backend AMI ID
-      #   working-directory: 3-tier-infra-app
-      #   id: get_backend_ami_id
-      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-      #   run: |
-      #     AMI_ID_BACKEND=$(jq -r '.builds[0].artifact_id' packer-manifest-backend.json | cut -d':' -f2)
-      #     echo "AMI_ID_BACKEND=$AMI_ID_BACKEND" >> $GITHUB_ENV
-      #     echo "ami_id_backend=$AMI_ID_BACKEND" >> $GITHUB_OUTPUT
+      - name: Get Backend AMI ID
+        working-directory: 3-tier-infra-app
+        id: get_backend_ami_id
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: |
+          AMI_ID_BACKEND=$(jq -r '.builds[0].artifact_id' packer-manifest-backend.json | cut -d':' -f2)
+          echo "AMI_ID_BACKEND=$AMI_ID_BACKEND" >> $GITHUB_ENV
+          echo "ami_id_backend=$AMI_ID_BACKEND" >> $GITHUB_OUTPUT
 
-      # - name: Print AMI IDs
-      #   working-directory: 3-tier-infra-app
-      #   run: |
-      #     echo "Backend AMI ID: ${{ env.AMI_ID_BACKEND }}"
+      - name: Print AMI IDs
+        working-directory: 3-tier-infra-app
+        run: |
+          echo "Backend AMI ID: ${{ env.AMI_ID_BACKEND }}"
 
       - name: Terraform Init        
         id: init-backend
