@@ -127,25 +127,6 @@ jobs:
       #   run: |
       #     echo "Backend AMI ID: ${{ env.AMI_ID_BACKEND }}"
 
-      # - name: Wait for AMI availability
-      #   working-directory: 3-tier-infra-app
-      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-      #   run: |
-      #     echo "Waiting for AMI ${{ env.AMI_ID_BACKEND }} to be available..."
-      #     for i in {1..10}; do
-      #       state=$(aws ec2 describe-images --image-ids ${{ env.AMI_ID_BACKEND }} --region ${{ env.AWS_REGION }} --query 'Images[0].State' --output text)
-      #       echo "Attempt $i: AMI state is $state"
-      #       if [ "$state" == "available" ]; then
-      #         echo "AMI is available"
-      #         exit 0
-      #       fi
-      #       sleep 30
-      #     done
-      #     echo "Timeout waiting for AMI to be available"
-      #     exit 1
-      #   env:
-      #     AWS_REGION: ${{ env.AWS_REGION }}
-
       # - name: Terraform Init        
       #   id: init-backend
       #   working-directory: 3-tier-infra-app/backend
@@ -193,7 +174,40 @@ jobs:
           echo "AMI_ID_FRONTEND=$AMI_ID_FRONTEND" >> $GITHUB_ENV
           echo "ami_id_frontend=$AMI_ID_FRONTEND" >> $GITHUB_OUTPUT
 
-  
+      - name: Terraform Init        
+        id: init-frontend
+        working-directory: 3-tier-infra-app/frontend
+        env:
+          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+          AWS_TFSTATE_BUCKET_KEY_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
+          AWS_TFSTATE_REGION: ${{ secrets.AWS_TFSTATE_REGION }}
+          AWS_TFSTATE_LOCK_TABLE_NAME: ${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=3-tier-infra-app-frontend/${AWS_TFSTATE_BUCKET_KEY_NAME}" -backend-config="region=${AWS_TFSTATE_REGION}" -backend-config="dynamodb_table=${AWS_TFSTATE_LOCK_TABLE_NAME}"
+
+      - name: Terraform Validate        
+        id: validate-frontend
+        working-directory: 3-tier-infra-app/frontend
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan-frontend
+        working-directory: 3-tier-infra-app/frontend
+        env: 
+          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+          AWS_TFSTATE_BUCKET_KEY_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
+          AWS_TFSTATE_REGION: ${{ secrets.AWS_TFSTATE_REGION }}
+          AWS_TFSTATE_LOCK_TABLE_NAME: ${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}
+          AMI_ID_FRONTEND: ${{ secrets.AMI_ID_FRONTEND }}
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform plan -out=frontendtfplan -no-color -var="ec2_ami_id_frontend=${AMI_ID_FRONTEND}" -var="tfstate_bucket=${AWS_TFSTATE_BUCKET_NAME}" -var="base_tfstate_key=3-tier-infra-app/${AWS_TFSTATE_BUCKET_KEY_NAME}" -var="tfstate_region=${AWS_TFSTATE_REGION}" -var="tfstate_lock_table=${AWS_TFSTATE_LOCK_TABLE_NAME}"
+
+      # - name: Terraform Apply
+      #   id: apply-frontend
+      #   working-directory: 3-tier-infra-app/frontend
+      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+      #   run: terraform apply -auto-approve frontendtfplan
+
   # deploy-backend:
   #   runs-on: ubuntu-latest
   #   defaults:
