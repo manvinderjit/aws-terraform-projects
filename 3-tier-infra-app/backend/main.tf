@@ -15,7 +15,7 @@ data "terraform_remote_state" "base_infra" {
   config = {
     bucket         = var.tfstate_bucket
     key            = var.base_tfstate_key  # exact key for base infra tfstate
-    region         = var.aws_region
+    region         = "us-east-1"
     dynamodb_table = var.tfstate_lock_table
   }
 }
