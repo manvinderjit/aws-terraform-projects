@@ -27,12 +27,12 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}  
 
 jobs:
-  deploy:        
+  deploy-base-infra-rds:        
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-        working-directory: 3-tier-infra-app
+        working-directory: 3-tier-infra-app/base-infra-rds
 
     steps:
       - name: Checkout the repo
@@ -42,50 +42,78 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Setup Packer
-        uses: hashicorp/setup-packer@v2
-        with:
-          version: '1.10.0'
+          aws-region: ${{ secrets.AWS_REGION }}     
       
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.12.2"
 
-      - name: Build Backend AMI
+      - name: Terraform Format
+        id: fmt
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-        run: |
-          packer init .
-          packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_app=three-tier-ami-be-app" app.pkr.hcl
-
-      - name: Build Frontend AMI
+        run: terraform fmt -check
+        continue-on-error: true
+        
+      - name: Terraform Init
+        id: init        
+        env:
+          AWS_TFSTATE_BUCKET_KEY_NAME : ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
+          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=3-tier-infra-app/${AWS_TFSTATE_BUCKET_KEY_NAME}" -backend-config="region=${AWS_TFSTATE_REGION}" -backend-config="dynamodb_table=${AWS_TFSTATE_LOCK_TABLE_NAME}"
+        
+      - name: Terraform Validate
+        id: validate
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-        run: |
-          packer init .
-          packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_web=three-tier-ami-fe-web" app.pkr.hcl
-
-      - name: Get Backend AMI ID
-        id: get_backend_ami_id
+        run: terraform validate -no-color
+      
+      - name: Terraform Plan
+        id: plan
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-        run: |
-          AMI_ID_BACKEND=$(jq -r '.builds[0].artifact_id' packer-manifest-backend.json | cut -d':' -f2)
-          echo "AMI_ID_BACKEND=$AMI_ID_BACKEND" >> $GITHUB_ENV
-          echo "ami_id_backend=$AMI_ID_BACKEND" >> $GITHUB_OUTPUT
+        run: terraform plan -out=basetfplan -no-color -var="ec2_ami_id=${{ env.AMI_ID }}"
 
-      - name: Get Frontend AMI ID
-        id: get_frontend_ami_id
+      - name: Terraform Apply
+        id: apply
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-        run: |
-          AMI_ID_FRONTEND=$(jq -r '.builds[0].artifact_id' packer-manifest-frontend.json | cut -d':' -f2)
-          echo "AMI_ID_FRONTEND=$AMI_ID_FRONTEND" >> $GITHUB_ENV
-          echo "ami_id_frontend=$AMI_ID_FRONTEND" >> $GITHUB_OUTPUT
+        run: terraform apply -auto-approve basetfplan
 
-      - name: Print AMI IDs
-        run: |
-          echo "Backend AMI ID: ${{ env.AMI_ID_BACKEND }}"
-          echo "Frontend AMI ID: ${{ env.AMI_ID_FRONTEND }}"
+      # - name: Setup Packer
+      #   uses: hashicorp/setup-packer@v2
+      #   with:
+      #     version: '1.10.0'
+
+      # - name: Build Backend AMI
+      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+      #   run: |
+      #     packer init .
+      #     packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_app=three-tier-ami-be-app" app.pkr.hcl
+
+      # - name: Build Frontend AMI
+      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+      #   run: |
+      #     packer init .
+      #     packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_web=three-tier-ami-fe-web" app.pkr.hcl
+
+      # - name: Get Backend AMI ID
+      #   id: get_backend_ami_id
+      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+      #   run: |
+      #     AMI_ID_BACKEND=$(jq -r '.builds[0].artifact_id' packer-manifest-backend.json | cut -d':' -f2)
+      #     echo "AMI_ID_BACKEND=$AMI_ID_BACKEND" >> $GITHUB_ENV
+      #     echo "ami_id_backend=$AMI_ID_BACKEND" >> $GITHUB_OUTPUT
+
+      # - name: Get Frontend AMI ID
+      #   id: get_frontend_ami_id
+      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+      #   run: |
+      #     AMI_ID_FRONTEND=$(jq -r '.builds[0].artifact_id' packer-manifest-frontend.json | cut -d':' -f2)
+      #     echo "AMI_ID_FRONTEND=$AMI_ID_FRONTEND" >> $GITHUB_ENV
+      #     echo "ami_id_frontend=$AMI_ID_FRONTEND" >> $GITHUB_OUTPUT
+
+      # - name: Print AMI IDs
+      #   run: |
+      #     echo "Backend AMI ID: ${{ env.AMI_ID_BACKEND }}"
+      #     echo "Frontend AMI ID: ${{ env.AMI_ID_FRONTEND }}"
 
       
       # - name: Build AMI
