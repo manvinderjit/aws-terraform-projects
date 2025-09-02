@@ -17,9 +17,8 @@ variable "ami_name_app" {
   default = "three-tier-ami-be-app"
 }
 
-variable "ami_name_web" {
-  type    = string
-  default = "three-tier-ami-fe-web"
+variable "rds_endpoint" {
+  type = string
 }
 
 # Backend Source
@@ -65,7 +64,7 @@ build {
 
   provisioner "shell" {
     inline = [
-
+      "echo 'export DB_URL=${var.rds_endpoint}' | sudo tee -a /etc/profile.d/rds.sh"
       "sudo yum update -y",      
       "sudo yum install -y git java-21-amazon-corretto-devel wget unzip",
       "cd /home/ec2-user",      
@@ -78,47 +77,11 @@ build {
       "sudo ./mvnw clean package -DskipTests",
       "sudo rm -rf /home/ec2-user/tmp/app/"
 
-      # The jar file will be in /app/target/*.jar               
+      # The jar file will be in /app/target/*.jar    
     ]
   }
 
   post-processor "manifest" {
     output = "packer-manifest-backend.json"
-  }
-}
-
-# Frontend Build
-build {
-  name    = "frontend-web-ami"
-  sources = ["source.amazon-ebs.frontend_web"]
-
-  provisioner "shell" {
-    inline = [
-      "sudo yum update -y",
-      "sudo yum install -y git nodejs npm",
-      "cd /home/ec2-user",
-      "sudo mkdir tmpf tmpf/web",
-      "sudo git clone https://github.com/manvinderjit/react-springboot-test-app.git tmpf/web",
-      "sudo mkdir -p web",
-      "sudo cp -r tmpf/web/frontend/. web/",
-      "cd web",
-      "npm install",
-      "VITE_API_BASE_URL=\"https://ia.manvinderjit.com\" npm run build",
-      "sudo npm install -g serve",
-
-      # Install Nginx
-      "sudo yum install -y nginx",
-      
-      # Create nginx config
-      "echo 'server { listen 80; location / { proxy_pass http://localhost:3000; proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection \"upgrade\"; proxy_set_header Host $host; proxy_cache_bypass $http_upgrade; } }' | sudo tee /etc/nginx/conf.d/app.conf",
-
-      # Enable and start nginx service
-      "sudo systemctl enable nginx",
-      "sudo systemctl start nginx",
-    ]
-  }
-
-  post-processor "manifest" {
-    output = "packer-manifest-frontend.json"
   }
 }
