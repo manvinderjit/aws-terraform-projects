@@ -53,24 +53,58 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.12.2"
-      
-      - name: Build AMI
+
+      - name: Build Backend AMI
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: |
           packer init .
-          packer build -var "aws_region=us-east-2" -var "ami_name=three-tier-ami-app" app.pkr.hcl
+          packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_app=three-tier-ami-be-app" app.pkr.hcl
 
-      - name: Get AMI ID from manifest
-        id: get_ami_id
+      - name: Build Frontend AMI
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: |
-          AMI_ID=$(jq -r '.builds[0].artifact_id' packer-manifest.json | cut -d':' -f2)
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
-          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
+          packer init .
+          packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_web=three-tier-ami-fe-web" app.pkr.hcl
 
-      - name: Print AMI ID
+      - name: Get Backend AMI ID
+        id: get_backend_ami_id
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-        run: echo "AMI ID is ${{ env.AMI_ID }}"
+        run: |
+          AMI_ID_BACKEND=$(jq -r '.builds[0].artifact_id' packer-manifest-backend.json | cut -d':' -f2)
+          echo "AMI_ID_BACKEND=$AMI_ID_BACKEND" >> $GITHUB_ENV
+          echo "ami_id_backend=$AMI_ID_BACKEND" >> $GITHUB_OUTPUT
+
+      - name: Get Frontend AMI ID
+        id: get_frontend_ami_id
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: |
+          AMI_ID_FRONTEND=$(jq -r '.builds[0].artifact_id' packer-manifest-frontend.json | cut -d':' -f2)
+          echo "AMI_ID_FRONTEND=$AMI_ID_FRONTEND" >> $GITHUB_ENV
+          echo "ami_id_frontend=$AMI_ID_FRONTEND" >> $GITHUB_OUTPUT
+
+      - name: Print AMI IDs
+        run: |
+          echo "Backend AMI ID: ${{ env.AMI_ID_BACKEND }}"
+          echo "Frontend AMI ID: ${{ env.AMI_ID_FRONTEND }}"
+
+      
+      # - name: Build AMI
+      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+      #   run: |
+      #     packer init .
+      #     packer build -var "aws_region=us-east-2" -var "ami_name=three-tier-ami-app" app.pkr.hcl
+
+      # - name: Get AMI ID from manifest
+      #   id: get_ami_id
+      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+      #   run: |
+      #     AMI_ID=$(jq -r '.builds[0].artifact_id' packer-manifest.json | cut -d':' -f2)
+      #     echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+      #     echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
+
+      # - name: Print AMI ID
+      #   if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+      #   run: echo "AMI ID is ${{ env.AMI_ID }}"
       
       # - name: Terraform Format
       #   id: fmt
