@@ -1,18 +1,18 @@
-packer {
-  required_plugins {
-    amazon = {
-      version = ">= 1.2.8"
-      source  = "github.com/hashicorp/amazon"
-    }
-  }
-}
+# packer {
+#   required_plugins {
+#     amazon = {
+#       version = ">= 1.2.8"
+#       source  = "github.com/hashicorp/amazon"
+#     }
+#   }
+# }
 
 # variable "aws_region" {
 #   type    = string
 #   default = "us-east-2"
 # }
 
-variable "ami_name" {
+variable "ami_name_fe" {
   type    = string
   default = "three-tier-ami-web"
 }
@@ -35,7 +35,7 @@ source "amazon-ebs" "web" {
 
   instance_type          = "t2.micro"
   ssh_username           = "ec2-user"
-  ami_name = "${var.ami_name}-${formatdate("YYYYMMDDhhmmss", timestamp())}"
+  ami_name = "${var.ami_name_fe}-${formatdate("YYYYMMDDhhmmss", timestamp())}"
 }
 
 build {
