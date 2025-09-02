@@ -391,7 +391,6 @@ resource "aws_lb_listener" "api_listener" {
   }
 }
 
-
 # resource "aws_autoscaling_group" "app_asg" {
 #   name                      = "three-tier-infra-app-asg"
 #   max_size                  = 3
