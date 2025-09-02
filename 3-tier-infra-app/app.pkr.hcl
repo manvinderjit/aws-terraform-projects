@@ -23,7 +23,7 @@ variable "rds_endpoint" {
 
 # Backend Source
 source "amazon-ebs" "backend_app" {
-  region                  = var.aws_region
+  region                  = "us-east-2"
   source_ami_filter {
     filters = {
       name                = "al2023-ami-*-x86_64"
@@ -37,24 +37,6 @@ source "amazon-ebs" "backend_app" {
   instance_type          = "t2.micro"
   ssh_username           = "ec2-user"
   ami_name = "${var.ami_name_app}-${formatdate("YYYYMMDDhhmmss", timestamp())}"
-}
-
-# Frontend Source
-source "amazon-ebs" "frontend_web" {
-  region                  = var.aws_region
-  source_ami_filter {
-    filters = {
-      name                = "al2023-ami-*-x86_64"
-      virtualization-type = "hvm"
-      root-device-type    = "ebs"
-    }
-    owners      = ["137112412989"] # Amazon as the official owner
-    most_recent = true
-  }
-
-  instance_type          = "t2.micro"
-  ssh_username           = "ec2-user"
-  ami_name = "${var.ami_name_web}-${formatdate("YYYYMMDDhhmmss", timestamp())}"
 }
 
 # Backend build
