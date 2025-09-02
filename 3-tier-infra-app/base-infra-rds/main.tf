@@ -249,8 +249,8 @@ resource "aws_security_group" "three_tier_infra_app_private_ec2_sg" {
   }
 
   ingress {
-    from_port       = 80
-    to_port         = 80
+    from_port       = 8080
+    to_port         = 8080
     protocol        = "tcp"
     security_groups = [aws_security_group.three_tier_infra_app_api_alb_sg.id]
   }
@@ -366,17 +366,19 @@ resource "aws_lb" "three_tier_infra_app_api_alb" {
 
 resource "aws_lb_target_group" "api_tg" {
   name     = "three-tier-infra-app-api-tg"
-  port     = 80
+  port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.three_tier_infra_app_vpc.id
 
   health_check {
-    path                = "/"
+    path                = "/api/movies"
     protocol            = "HTTP"
+    port                = "8080"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 3
     unhealthy_threshold = 2
+    matcher             = "200"
   }
 }
 

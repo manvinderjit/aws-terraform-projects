@@ -21,7 +21,8 @@ data "terraform_remote_state" "base_infra" {
 
 resource "aws_launch_template" "backend_lt" {
   name_prefix   = "three-tier-backend-lt"
-  image_id      = var.ec2_ami_id_backend
+  # image_id      = var.ec2_ami_id_backend
+  image_id      =  "ami-04b1b28b8a141830e"
   instance_type = var.instance_type
   key_name      = var.ec2_key_name
 
@@ -57,7 +58,7 @@ resource "aws_autoscaling_group" "backend_asg" {
   ]
 
   health_check_type         = "EC2"
-  health_check_grace_period = 300
+  health_check_grace_period = 600
 
   tag {
     key                 = "Name"
