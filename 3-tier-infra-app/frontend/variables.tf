@@ -22,29 +22,6 @@ variable "ec2_ami_id_frontend" {
   default     = "ami-0fdfba26e5a9e81e6"
 }
 
-# variable "rds_endpoint" {
-#   description = "RDS endpoint for backend to connect to"
-#   type        = string
-# }
-
-# variable "db_username" {
-#   description = "RDS database username"
-#   type        = string
-#   sensitive   = true
-# }
-
-# variable "db_password" {
-#   description = "RDS database password"
-#   type        = string
-#   sensitive   = true
-# }
-
-# variable "db_name" {
-#   description = "RDS default database"
-#   type        = string
-#   sensitive   = true
-# }
-
 variable "tfstate_bucket" {}
 variable "base_tfstate_key" {}
 variable "tfstate_region" {}
