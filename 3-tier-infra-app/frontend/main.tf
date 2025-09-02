@@ -21,7 +21,7 @@ data "terraform_remote_state" "base_infra" {
 
 resource "aws_launch_template" "frontend_lt" {
   name_prefix   = "three-tier-frontend-lt"
-  image_id      = var.ec2_ami_id_frontend
+  image_id      = "ami-0fdfba26e5a9e81e6"
   instance_type = var.instance_type
   key_name      = var.ec2_key_name
 
@@ -47,8 +47,7 @@ resource "aws_autoscaling_group" "frontend_asg" {
   vpc_zone_identifier = data.terraform_remote_state.base_infra.outputs.public_subnet_ids
 
   launch_template {
-    id      = aws_launch_template.frontend_lt.id
-    version = "$Latest"
+    id      = aws_launch_template.frontend_lt.id    
   }
 
   target_group_arns = [
