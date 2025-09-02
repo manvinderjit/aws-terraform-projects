@@ -10,7 +10,7 @@ provider "aws" {
 }
 
 data "terraform_remote_state" "base_infra" {
-  backend = "s3"   # or whatever backend you use (S3/DynamoDB, etc)
+  backend = "s3" 
 
   config = {
     bucket         = var.tfstate_bucket
