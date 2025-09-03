@@ -75,6 +75,7 @@ resource "aws_subnet" "three_tier_infra_app_subnet_public_3" {
   }
 }
 
+# Private Subnets
 resource "aws_subnet" "three_tier_infra_app_subnet_private_1" {
   vpc_id                  = aws_vpc.three_tier_infra_app_vpc.id
   cidr_block              = "192.168.4.0/24"
