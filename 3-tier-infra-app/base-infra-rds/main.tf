@@ -15,7 +15,7 @@ resource "aws_vpc" "three_tier_infra_app_vpc" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "3-tier-infra-app-vpc"
+    Name = "3-tier-infra-app-vpc-new"
   }
 }
 
