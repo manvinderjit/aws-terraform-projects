@@ -113,6 +113,7 @@ resource "aws_subnet" "three_tier_infra_app_ecr_subnet_rds_2" {
   }
 }
 
+# Route table associations - public
 resource "aws_route_table_association" "three_tier_infra_app_public_association_1" {
   subnet_id      = aws_subnet.three_tier_infra_app_ecr_subnet_public_1.id
   route_table_id = aws_route_table.three_tier_infra_app_ecr_public_rt.id
