@@ -221,27 +221,6 @@ resource "aws_security_group" "three_tier_infra_webserver_ec2_sg" {
   }
 }
 
-# Security Group for API ALB (internal)
-resource "aws_security_group" "three_tier_infra_app_api_alb_sg" {
-  name        = "three-tier-infra-app-api-alb-sg"
-  description = "Allow HTTP inbound from front-facing EC2s only"
-  vpc_id      = aws_vpc.three_tier_infra_app_vpc.id
-
-  ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.three_tier_infra_webserver_ec2_sg.id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
 resource "aws_security_group" "three_tier_infra_app_private_ec2_sg" {
   name        = "three-tier-infra-app-private-ec2-sg"
   description = "Allow access from public EC2 only"
@@ -255,11 +234,11 @@ resource "aws_security_group" "three_tier_infra_app_private_ec2_sg" {
     security_groups = [aws_security_group.three_tier_infra_webserver_ec2_sg.id]
   }
 
-  ingress {
+   ingress {
     from_port       = 8080
     to_port         = 8080
     protocol        = "tcp"
-    security_groups = [aws_security_group.three_tier_infra_app_api_alb_sg.id]
+    security_groups = [aws_security_group.three_tier_infra_app_fe_alb_sg.id]
   }
 
   egress {
@@ -360,20 +339,8 @@ resource "aws_lb_listener" "app_listener" {
   }
 }
 
-# Internal backend API ALB
-resource "aws_lb" "three_tier_infra_app_api_alb" {
-  name               = "three-tier-infra-app-api-alb"
-  internal           = true
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.three_tier_infra_app_api_alb_sg.id]
-  subnets            = [
-    aws_subnet.three_tier_infra_app_subnet_private_1.id,
-    aws_subnet.three_tier_infra_app_subnet_private_2.id
-  ]
-}
-
-resource "aws_lb_target_group" "api_tg" {
-  name     = "three-tier-infra-app-api-tg"
+resource "aws_lb_target_group" "three_tier_infra_app_backend_tg" {
+  name     = "three-tier-infra-app-backend-tg"
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.three_tier_infra_app_vpc.id
@@ -390,13 +357,18 @@ resource "aws_lb_target_group" "api_tg" {
   }
 }
 
-resource "aws_lb_listener" "api_listener" {
-  load_balancer_arn = aws_lb.three_tier_infra_app_api_alb.arn
-  port              = 80
-  protocol          = "HTTP"
+resource "aws_lb_listener_rule" "api_route" {
+  listener_arn = aws_lb_listener.app_listener.arn
+  priority     = 10
 
-  default_action {
+  action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.api_tg.arn
+    target_group_arn = aws_lb_target_group.three_tier_infra_app_backend_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/*"]
+    }
   }
 }

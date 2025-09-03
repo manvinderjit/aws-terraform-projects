@@ -62,3 +62,7 @@ output "api_target_group_arn" {
 output "private_alb_dns" {
   value = aws_lb.three_tier_infra_app_api_alb.dns_name
 }
+
+output "backend_target_group_arn" {
+  value = aws_lb_target_group.backend_tg.arn
+}
