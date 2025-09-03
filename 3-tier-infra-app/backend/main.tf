@@ -44,7 +44,7 @@ resource "aws_launch_template" "backend_lt" {
 }
 
 resource "aws_autoscaling_group" "backend_asg" {
-  name             = "three-tier-backend-asg"
+  name_prefix      = "three-tier-backend-asg-"
   desired_capacity = 2
   max_size         = 3
   min_size         = 1
@@ -52,14 +52,15 @@ resource "aws_autoscaling_group" "backend_asg" {
   vpc_zone_identifier = data.terraform_remote_state.base_infra.outputs.private_subnet_ids
 
   launch_template {
-    id      = aws_launch_template.backend_lt.id    
+    id      = aws_launch_template.backend_lt.id
+    version = aws_launch_template.backend_lt.latest_version
   }
 
   target_group_arns = [
-    data.terraform_remote_state.base_infra.outputs.api_target_group_arn
+    data.terraform_remote_state.base_infra.outputs.backend_target_group_arn
   ]
 
-  health_check_type         = "EC2"
+  health_check_type         = "ELB"
   health_check_grace_period = 600
   
 
