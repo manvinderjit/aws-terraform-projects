@@ -14,16 +14,14 @@ data "terraform_remote_state" "base_infra" {
 
   config = {
     bucket         = var.tfstate_bucket
-    key            = var.base_tfstate_key  # exact key for base infra tfstate
+    key            = var.base_tfstate_key
     region         = "us-east-1"    
   }
 }
 
 resource "aws_launch_template" "frontend_lt" {
   name_prefix   = "three-tier-frontend-lt"
-  # image_id      = var.ec2_ami_id_frontend
-  # image_id      = "ami-098ec626d18959182"
-  image_id = "ami-00eb9487a67ead333"
+  image_id      = var.ec2_ami_id_frontend  
   instance_type = var.instance_type
   key_name      = var.ec2_key_name
 
@@ -41,7 +39,7 @@ resource "aws_launch_template" "frontend_lt" {
 
 # Auto Scaling Group for Frontend EC2
 resource "aws_autoscaling_group" "frontend_asg" {
-  name_prefix      = "three-tier-frontend-asg"
+  name             = "three-tier-frontend-asg"
   desired_capacity = 2
   max_size         = 3
   min_size         = 1
