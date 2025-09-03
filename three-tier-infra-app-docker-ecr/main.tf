@@ -186,7 +186,7 @@ resource "aws_security_group" "three_tier_infra_app_ecr_fe_alb_sg" {
   }
 }
 
-# Security groups for ec2 instances
+# Security groups for ec2 - web tier
 resource "aws_security_group" "three_tier_infra_app_ecr_web_ec2_sg" {
   name        = "three-tier-infra-app-ecr-web-ec2-sg"
   description = "Allow SSH from the internet and local traffic on port 3000"
