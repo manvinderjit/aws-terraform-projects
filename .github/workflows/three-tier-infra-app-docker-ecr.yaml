@@ -5,7 +5,7 @@ on:
     paths:
       - 'three-tier-infra-app-docker-ecr/**'
     branches:
-      - project/3-tier-infra-app-docker-ecr 
+      - project/3-tier-infra-app-docker-ecr
 
   workflow_dispatch:
     inputs:

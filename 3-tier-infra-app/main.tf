@@ -105,7 +105,7 @@ resource "aws_subnet" "three_tier_infra_app_subnet_private_3" {
   }
 }
 
-# Route table associations
+# Route table associations - public
 resource "aws_route_table_association" "three_tier_infra_app_public_association_1" {
   subnet_id      = aws_subnet.three_tier_infra_app_subnet_public_1.id
   route_table_id = aws_route_table.three_tier_infra_app_public_rt.id
@@ -121,6 +121,7 @@ resource "aws_route_table_association" "three_tier_infra_app_public_association_
   route_table_id = aws_route_table.three_tier_infra_app_public_rt.id
 }
 
+# Route table associations - private
 resource "aws_route_table_association" "three_tier_infra_app_private_association_1" {
   subnet_id      = aws_subnet.three_tier_infra_app_subnet_private_1.id
   route_table_id = aws_route_table.three_tier_infra_app_private_rt.id
