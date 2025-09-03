@@ -41,7 +41,7 @@ resource "aws_launch_template" "frontend_lt" {
 
 # Auto Scaling Group for Frontend EC2
 resource "aws_autoscaling_group" "frontend_asg" {
-  name             = "three-tier-frontend-asg"
+  name_prefix      = "three-tier-frontend-asg"
   desired_capacity = 2
   max_size         = 3
   min_size         = 1
