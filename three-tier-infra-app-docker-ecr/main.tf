@@ -215,6 +215,7 @@ resource "aws_security_group" "three_tier_infra_app_ecr_web_ec2_sg" {
   }
 }
 
+# Security groups for ec2 - app tier
 resource "aws_security_group" "three_tier_infra_app_ecr_app_ec2_sg" {
   name        = "three-tier-infra-app-ecr-app-ec2-sg"
   description = "Allow access from public EC2 only"
