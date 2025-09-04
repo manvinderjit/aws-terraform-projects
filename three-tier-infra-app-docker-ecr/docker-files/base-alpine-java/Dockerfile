@@ -1,3 +1,4 @@
+# Use alpine latest for base image
 FROM alpine:latest
 
 LABEL purpose="Minimal base image with OpenJDK 21 for Spring Boot deployment"
