@@ -273,7 +273,7 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 
 # RDS Database
 resource "aws_db_instance" "three_tier_infra_app_ecr_dbs" {
-  identifier              = "three-tier-infra-ecr-db"
+  identifier              = "three-tier-infra-app-ecr-db"
   allocated_storage       = 20
   storage_type            = "gp2"
   engine                  = "mysql"
@@ -292,7 +292,7 @@ resource "aws_db_instance" "three_tier_infra_app_ecr_dbs" {
 
 # Application Load Balancer - Frontend
 resource "aws_lb" "three_tier_infra_app_ecr_ws_alb" {
-  name               = "three-tier-infra-app-ws-alb"
+  name               = "three-tier-infra-app-ecr-ws-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups   = [aws_security_group.three_tier_infra_app_ecr_fe_alb_sg.id]
@@ -303,7 +303,7 @@ resource "aws_lb" "three_tier_infra_app_ecr_ws_alb" {
 }
 
 resource "aws_lb_target_group" "three_tier_infra_app_ecr_ws_tg" {
-  name     = "three-tier-infra-app-ws-tg"
+  name     = "three-tier-infra-app-ecr-ws-tg"
   port     = 3000
   protocol = "HTTP"
   vpc_id   = aws_vpc.three_tier_infra_app_ecr_vpc.id
