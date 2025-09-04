@@ -92,7 +92,7 @@ jobs:
           APP_IMAGE_TAG: v1
         run: |
           BASE_IMAGE_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION_TERRA}.amazonaws.com/aws-terra-projects/base-alpine-java:${BASE_IMAGE_TAG}
-          APP_IMAGE_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION_TERRA}.amazonaws.com/aws-terra-projects/movies-monolithic-app:${APP_IMAGE_TAG}
+          APP_IMAGE_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION_TERRA}.amazonaws.com/aws-terra-projects/three-tier-infra-app-docker-ecr/movies-monolithic-app:${APP_IMAGE_TAG}
 
           # Build the app image, passing base image as build-arg
           docker build \

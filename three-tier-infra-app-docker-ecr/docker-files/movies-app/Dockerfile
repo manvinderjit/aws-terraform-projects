@@ -1,3 +1,4 @@
+# Pass the base image from ecr in github action workflow
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
