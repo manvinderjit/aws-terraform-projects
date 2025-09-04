@@ -27,6 +27,34 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}  
 
 jobs:
+  build_push_base_alpine_java_image:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: three-tier-infra-app-docker-ecr
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push Docker image to ECR
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION_TERRA: ${{ secrets.AWS_REGION_TERRA }}          
+          IMAGE_TAG: v1
+        run: |
+          IMAGE_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION_TERRA}.amazonaws.com/aws-terra-projects/base-alpine-java:${IMAGE_TAG}
+          docker build -t $IMAGE_URI three-tier-infra-app-docker-ecr/docker-files/base-alpine-java
+          docker push $IMAGE_URI
+
   deploy:        
     runs-on: ubuntu-latest
     defaults:
