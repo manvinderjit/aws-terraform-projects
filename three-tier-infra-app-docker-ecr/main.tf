@@ -290,7 +290,7 @@ resource "aws_db_instance" "three_tier_infra_app_ecr_dbs" {
   backup_retention_period = 0
 }
 
-# ALBs
+# Application Load Balancer - Frontend
 resource "aws_lb" "three_tier_infra_app_ecr_ws_alb" {
   name               = "three-tier-infra-app-ws-alb"
   internal           = false
