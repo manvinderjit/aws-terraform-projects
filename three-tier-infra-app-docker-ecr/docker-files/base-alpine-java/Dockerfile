@@ -1,6 +1,7 @@
 # Use alpine latest for base image
 FROM alpine:latest
 
+# Add label
 LABEL purpose="Minimal base image with OpenJDK 21 for Spring Boot deployment"
 
 # Install OpenJDK 21 and timezone data only

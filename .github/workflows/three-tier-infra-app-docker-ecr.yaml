@@ -37,7 +37,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION_TERRA }}
       
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
