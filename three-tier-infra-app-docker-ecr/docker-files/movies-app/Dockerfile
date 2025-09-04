@@ -3,7 +3,7 @@ FROM ${BASE_IMAGE}
 
 WORKDIR /app
 
-COPY target/*.jar app.jar
+COPY combined/target/*.jar app.jar
 
 EXPOSE 8080
 
