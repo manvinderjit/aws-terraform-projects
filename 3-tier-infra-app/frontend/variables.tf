@@ -16,7 +16,13 @@ variable "instance_type" {
   default     = "t2.micro"
 }
 
-variable "ec2_ami_id" {
+variable "ec2_ami_id_frontend" {
   description = "ami to be used for launching ec2"
   type        = string
+  default     = "ami-0fdfba26e5a9e81e6"
 }
+
+variable "tfstate_bucket" {}
+variable "base_tfstate_key" {}
+variable "tfstate_region" {}
+variable "tfstate_lock_table" {}
