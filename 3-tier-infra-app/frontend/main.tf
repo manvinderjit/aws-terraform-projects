@@ -43,6 +43,7 @@ resource "aws_autoscaling_group" "frontend_asg" {
   desired_capacity = 2
   max_size         = 3
   min_size         = 1
+  force_delete = true
 
   vpc_zone_identifier = data.terraform_remote_state.base_infra.outputs.public_subnet_ids
 
