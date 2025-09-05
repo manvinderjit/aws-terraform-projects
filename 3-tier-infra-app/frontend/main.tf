@@ -47,7 +47,8 @@ resource "aws_autoscaling_group" "frontend_asg" {
   vpc_zone_identifier = data.terraform_remote_state.base_infra.outputs.public_subnet_ids
 
   launch_template {
-    id      = aws_launch_template.frontend_lt.id    
+    id      = aws_launch_template.frontend_lt.id
+    version = aws_launch_template.frontend_lt.latest_version
   }
 
   target_group_arns = [
