@@ -102,6 +102,31 @@ jobs:
             ./app
 
           docker push $APP_IMAGE_URI
+  
+  build_push_base_alpine_node_image:    
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4        
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION_TERRA }}
+      
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push Docker image to ECR
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION_TERRA: ${{ secrets.AWS_REGION_TERRA }}          
+          IMAGE_TAG: v1
+        run: |
+          IMAGE_URI_BASE_NODEJS=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION_TERRA}.amazonaws.com/aws-terra-projects/base-alpine-nodejs:${IMAGE_TAG}
+          docker build -t $IMAGE_URI_BASE_NODEJS three-tier-infra-app-docker-ecr/docker-files/base-alpine-nodejs
+          docker push $IMAGE_URI_BASE_NODEJS  
 
 # docker run -e DB_HOST=your-db-host -e DB_USER=youruser -e DB_PASS=yourpass your-image:tag
 
