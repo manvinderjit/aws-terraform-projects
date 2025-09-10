@@ -208,9 +208,3 @@ resource "aws_route" "msk_to_nat" {
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.nat_gw.id
 }
-
-resource "aws_route" "rds_to_nat" {
-  route_table_id         = aws_route_table.eks_msk_rds_app_rds_rt.id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.nat_gw.id
-}
