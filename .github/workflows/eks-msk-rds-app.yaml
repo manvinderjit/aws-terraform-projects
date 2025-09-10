@@ -31,7 +31,8 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        shell: bash       
+        shell: bash
+        working-directory: eks-msk-rds-app
     outputs:
       ami_id_backend: ${{ steps.get_backend_ami_id.outputs.ami_id_backend }}
 

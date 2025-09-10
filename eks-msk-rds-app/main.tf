@@ -160,7 +160,6 @@ resource "aws_route_table_association" "eks_msk_rds_app_private_association_2" {
   route_table_id = aws_route_table.eks_msk_rds_app_private_rt.id
 }
 
-
 resource "aws_route_table_association" "eks_msk_rds_app_rds_association_1" {
   subnet_id      = aws_subnet.eks_msk_rds_app_subnet_rds_1.id
   route_table_id = aws_route_table.eks_msk_rds_app_rds_rt.id
