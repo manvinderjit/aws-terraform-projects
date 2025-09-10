@@ -207,3 +207,86 @@ resource "aws_route" "msk_to_nat" {
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.nat_gw.id
 }
+
+resource "aws_route" "eks_private_to_nat" {
+  route_table_id         = aws_route_table.eks_msk_rds_app_private_rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat_gw.id
+}
+
+# Security Groups
+resource "aws_security_group" "eks_msk_rds_app_sg_eks_node" {
+  name        = "eks-msk-rds-app-eks-node-sg"
+  description = "Security group for EKS worker nodes"
+  vpc_id      = aws_vpc.eks_msk_rds_app_vpc.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow SSH from my IP"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "eks-msk-rds-app-sg-eks-node"
+  }
+}
+
+resource "aws_security_group" "eks_msk_rds_app_sg_rds" {
+  name        = "eks-msk-rds-app-sg-rds"
+  description = "Allow MySQL from EC2"
+  vpc_id      = aws_vpc.eks_msk_rds_app_vpc.id
+
+  ingress {
+    description     = "MySQL access from EKS Nodes"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.eks_msk_rds_app_sg_eks_node.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_db_subnet_group" "db_subnet_group" {
+  name       = "eks-msk-rds-app-rds-db-sbnt-grp"
+  subnet_ids = [
+    aws_subnet.eks_msk_rds_app_subnet_rds_1.id,
+    aws_subnet.eks_msk_rds_app_subnet_rds_2.id
+  ]
+}
+
+# # RDS Database
+resource "aws_db_instance" "default" {
+  identifier              = "terraform-db"
+  allocated_storage       = 20
+  storage_type            = "gp2"
+  engine                  = "mysql"
+  engine_version          = "8.0.42"
+  instance_class          = "db.t4g.micro"    
+  username                = var.db_username
+  password                = var.db_password
+  db_name                 = var.db_name
+  db_subnet_group_name    = aws_db_subnet_group.db_subnet_group.name
+  vpc_security_group_ids  = [aws_security_group.eks_msk_rds_app_sg_rds.id]
+  skip_final_snapshot     = true
+  publicly_accessible     = false
+  multi_az                = false
+  backup_retention_period = 0
+  tags = {
+    Name = "eks-msk-rds-app-rds-terraform-db"
+  }
+}
