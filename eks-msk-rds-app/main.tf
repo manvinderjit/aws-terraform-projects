@@ -269,7 +269,7 @@ resource "aws_db_subnet_group" "db_subnet_group" {
   ]
 }
 
-# # RDS Database
+# RDS Database
 resource "aws_db_instance" "default" {
   identifier              = "terraform-db"
   allocated_storage       = 20
