@@ -317,58 +317,6 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSVPCResourceContr
   role       = aws_iam_role.eks_msk_rds_app_eks_cluster_role.name
 }
 
-resource "aws_iam_openid_connect_provider" "eks" {
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da0afd2e4a1"] # This is the thumbprint for EKS OIDC providers
-  url             = aws_eks_cluster.eks_msk_rds_app_eks_cluster.identity[0].oidc[0].issuer
-}
-
-
-resource "aws_eks_addon" "external_dns" {
-  cluster_name             = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-  addon_name               = "external-dns"
-  service_account_role_arn = aws_iam_role.external_dns_role.arn
-}
-
-
-resource "kubernetes_service_account" "external_dns_sa" {
-  metadata {
-    name      = "external-dns"
-    namespace = "kube-system"
-    annotations = {
-      "eks.amazonaws.com/role-arn" = aws_iam_role.external_dns_role.arn
-    }
-  }
-}
-
-
-resource "aws_iam_role" "external_dns_role" {
-  name = "external-dns-iam-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Federated = aws_iam_openid_connect_provider.eks.id
-        },
-        Action = "sts:AssumeRoleWithWebIdentity",
-        Condition = {
-          StringEquals = {
-            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:external-dns"
-          }
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "external_dns_policy_attach" {
-  role       = aws_iam_role.external_dns_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonRoute53FullAccess"
-}
-
-
 resource "aws_eks_cluster" "eks_msk_rds_app_eks_cluster" {
   name     = "eks-msk-rds-app-cluster"
   role_arn = aws_iam_role.eks_msk_rds_app_eks_cluster_role.arn
