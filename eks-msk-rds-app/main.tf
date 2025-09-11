@@ -317,6 +317,7 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSVPCResourceContr
   role       = aws_iam_role.eks_msk_rds_app_eks_cluster_role.name
 }
 
+
 resource "aws_eks_cluster" "eks_msk_rds_app_eks_cluster" {
   name     = "eks-msk-rds-app-cluster"
   role_arn = aws_iam_role.eks_msk_rds_app_eks_cluster_role.arn
@@ -385,4 +386,67 @@ resource "aws_eks_addon" "pod_identity_agent" {
 resource "aws_eks_addon" "node_monitoring_agent" {
   cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
   addon_name   = "eks-node-monitoring-agent"
+}
+
+
+resource "aws_iam_role" "eks_node_group_role" {
+  name = "eks-node-group-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = {
+    Name = "eks-node-group-role"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "node_group_AmazonEKSWorkerNodePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+  role       = aws_iam_role.eks_node_group_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "node_group_AmazonEKS_CNI_Policy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+  role       = aws_iam_role.eks_node_group_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "node_group_AmazonEC2ContainerRegistryReadOnly" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role       = aws_iam_role.eks_node_group_role.name
+}
+
+resource "aws_eks_node_group" "eks_nodes" {
+  cluster_name    = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  node_group_name = "eks-t3micro-ng"
+  node_role_arn   = aws_iam_role.eks_node_group_role.arn
+  subnet_ids      = [
+    aws_subnet.eks_msk_rds_app_subnet_private_eks_1.id,
+    aws_subnet.eks_msk_rds_app_subnet_private_eks_2.id
+  ]
+  instance_types  = ["t3.micro"]
+
+  scaling_config {
+    desired_size = 2
+    max_size     = 2
+    min_size     = 2
+  }
+
+  ami_type             = "AL2023_x86_64"
+  disk_size            = 8              
+  capacity_type        = "ON_DEMAND"
+  force_update_version = true
+
+  tags = {
+    Name = "eks-node-group-t3micro"
+  }
 }
