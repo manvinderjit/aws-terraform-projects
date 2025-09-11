@@ -332,6 +332,9 @@ resource "aws_eks_cluster" "eks_msk_rds_app_eks_cluster" {
     endpoint_public_access  = true
     public_access_cidrs     = ["0.0.0.0/0"]
   }
+  upgrade_policy {    
+    support_type = "STANDARD" 
+  }
 
   enabled_cluster_log_types = [] # No logs enabled
   tags = {
@@ -342,105 +345,3 @@ resource "aws_eks_cluster" "eks_msk_rds_app_eks_cluster" {
   deletion_protection = false
  
 }
-
-
-# resource "aws_route" "eks_private_to_nat" {
-#   route_table_id         = aws_route_table.eks_msk_rds_app_private_rt.id
-#   destination_cidr_block = "0.0.0.0/0"
-#   nat_gateway_id         = aws_nat_gateway.nat_gw.id
-# }
-
-# # Security groups for public alb
-# resource "aws_security_group" "eks_msk_rds_app_fe_alb_sg" {
-#   name        = "eks-msk-rds-app-fe-alb-sg"
-#   description = "Allow HTTP inbound from anywhere"
-#   vpc_id      = aws_vpc.eks_msk_rds_app_vpc.id
-
-#   ingress {
-#     from_port   = 80
-#     to_port     = 80
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-
-#   egress {
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-# }
-
-# ALBs
-# resource "aws_lb" "eks_msk_rds_app_ws_alb" {
-#   name               = "eks-msk-rds-app-ws-alb"
-#   internal           = false
-#   load_balancer_type = "application"
-#   security_groups   = [aws_security_group.eks_msk_rds_app_fe_alb_sg.id]
-#   subnets            = [
-#     aws_subnet.eks_msk_rds_app_subnet_public_1.id,
-#     aws_subnet.eks_msk_rds_app_subnet_public_2.id    
-#   ]
-# }
-
-# resource "aws_lb_target_group" "eks_msk_rds_app_ws_tg" {
-#   name     = "eks-msk-rds-app-ws-tg"
-#   port     = 3000
-#   protocol = "HTTP"
-#   vpc_id   = aws_vpc.eks_msk_rds_app_vpc.id
-
-#   health_check {
-#     path                = "/"
-#     protocol            = "HTTP"
-#     port                = "3000"
-#     interval            = 30
-#     timeout             = 5
-#     healthy_threshold   = 5
-#     unhealthy_threshold = 2
-#   }
-# }
-
-# resource "aws_lb_listener" "app_listener" {
-#   load_balancer_arn = aws_lb.eks_msk_rds_app_ws_alb.arn
-#   port              = 80
-#   protocol          = "HTTP"
-
-#   default_action {
-#     type             = "forward"
-#     target_group_arn = aws_lb_target_group.eks_msk_rds_app_ws_tg.arn
-#   }
-# }
-
-# resource "aws_lb_target_group" "eks_msk_rds_app_backend_tg" {
-#   name     = "eks-msk-rds-app-backend-tg"
-#   port     = 8080
-#   protocol = "HTTP"
-#   vpc_id   = aws_vpc.eks_msk_rds_app_vpc.id
-
-#   health_check {
-#     path                = "/api/movies"
-#     protocol            = "HTTP"
-#     port                = "8080"
-#     interval            = 30
-#     timeout             = 5
-#     healthy_threshold   = 3
-#     unhealthy_threshold = 2
-#     matcher             = "200"
-#   }
-# }
-
-# resource "aws_lb_listener_rule" "api_route" {
-#   listener_arn = aws_lb_listener.app_listener.arn
-#   priority     = 10
-
-#   action {
-#     type             = "forward"
-#     target_group_arn = aws_lb_target_group.eks_msk_rds_app_backend_tg.arn
-#   }
-
-#   condition {
-#     path_pattern {
-#       values = ["/api/*"]
-#     }
-#   }
-# }
