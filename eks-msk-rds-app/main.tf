@@ -493,7 +493,7 @@ resource "aws_security_group" "eks_msk_rds_app_sg_msk" {
 
 resource "aws_msk_cluster" "eks_msk_rds_app_msk_cluster" {
   cluster_name           = "eks-msk-rds-app-msk-cluster"
-  kafka_version          = "3.8.0"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 2
   broker_node_group_info {
     instance_type   = "kafka.t3.small"    
