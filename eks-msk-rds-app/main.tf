@@ -331,6 +331,10 @@ resource "aws_eks_cluster" "eks_msk_rds_app_eks_cluster" {
   role_arn = aws_iam_role.eks_msk_rds_app_eks_cluster_role.arn
   version  = "1.33"
 
+   access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+  }
+
   vpc_config {
     subnet_ids              = [
       aws_subnet.eks_msk_rds_app_subnet_private_eks_1.id,
@@ -340,6 +344,8 @@ resource "aws_eks_cluster" "eks_msk_rds_app_eks_cluster" {
     endpoint_public_access  = true
     public_access_cidrs     = ["0.0.0.0/0"]
   }
+     
+
   upgrade_policy {    
     support_type = "STANDARD" 
   }
