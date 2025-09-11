@@ -442,7 +442,7 @@ resource "aws_eks_node_group" "eks_nodes" {
   }
 
   ami_type             = "AL2023_x86_64_STANDARD"
-  disk_size            = 8              
+  disk_size            = 20              
   capacity_type        = "ON_DEMAND"
   force_update_version = true
 
