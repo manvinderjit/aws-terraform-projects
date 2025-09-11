@@ -345,3 +345,45 @@ resource "aws_eks_cluster" "eks_msk_rds_app_eks_cluster" {
   deletion_protection = false
  
 }
+
+# Amazon VPC CNI (Networking)
+resource "aws_eks_addon" "vpc_cni" {
+  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  addon_name   = "vpc-cni"
+}
+
+# CoreDNS (Networking)
+resource "aws_eks_addon" "coredns" {
+  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  addon_name   = "coredns"
+}
+
+# Kube Proxy (Networking)
+resource "aws_eks_addon" "kube_proxy" {
+  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  addon_name   = "kube-proxy"
+}
+
+# Metrics Server (Observability)
+resource "aws_eks_addon" "metrics_server" {
+  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  addon_name   = "metrics-server"
+}
+
+# External DNS (Networking)
+resource "aws_eks_addon" "external_dns" {
+  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  addon_name   = "external-dns"
+}
+
+# EKS Pod Identity Agent (Security)
+resource "aws_eks_addon" "pod_identity_agent" {
+  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  addon_name   = "eks-pod-identity-agent"
+}
+
+# EKS Node Monitoring Agent (Observability)
+resource "aws_eks_addon" "node_monitoring_agent" {
+  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  addon_name   = "eks-node-monitoring-agent"
+}
