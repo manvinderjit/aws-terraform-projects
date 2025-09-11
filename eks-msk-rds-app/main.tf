@@ -208,12 +208,6 @@ resource "aws_route" "msk_to_nat" {
   nat_gateway_id         = aws_nat_gateway.nat_gw.id
 }
 
-resource "aws_route" "eks_private_to_nat" {
-  route_table_id         = aws_route_table.eks_msk_rds_app_private_rt.id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.nat_gw.id
-}
-
 # Security Groups
 resource "aws_security_group" "eks_msk_rds_app_sg_eks_node" {
   name        = "eks-msk-rds-app-eks-node-sg"
