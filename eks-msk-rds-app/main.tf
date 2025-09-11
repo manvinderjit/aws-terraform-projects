@@ -352,29 +352,13 @@ resource "aws_eks_addon" "vpc_cni" {
   addon_name   = "vpc-cni"
 }
 
-# CoreDNS (Networking)
-# resource "aws_eks_addon" "coredns" {
-#   cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-#   addon_name   = "coredns"
-# }
-
 # Kube Proxy (Networking)
 resource "aws_eks_addon" "kube_proxy" {
   cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
   addon_name   = "kube-proxy"
 }
 
-# Metrics Server (Observability)
-# resource "aws_eks_addon" "metrics_server" {
-#   cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-#   addon_name   = "metrics-server"
-# }
 
-# External DNS (Networking)
-# resource "aws_eks_addon" "external_dns" {
-#   cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-#   addon_name   = "external-dns"
-# }
 
 # EKS Pod Identity Agent (Security)
 resource "aws_eks_addon" "pod_identity_agent" {
@@ -449,4 +433,25 @@ resource "aws_eks_node_group" "eks_nodes" {
   tags = {
     Name = "eks-node-group-t3micro"
   }
+}
+
+# CoreDNS (Networking)
+resource "aws_eks_addon" "coredns" {
+  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  addon_name   = "coredns"
+  depends_on = [ aws_eks_node_group.eks_nodes ]
+}
+
+# Metrics Server (Observability)
+resource "aws_eks_addon" "metrics_server" {
+  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  addon_name   = "metrics-server"
+  depends_on = [ aws_eks_node_group.eks_nodes ]
+}
+
+# External DNS (Networking)
+resource "aws_eks_addon" "external_dns" {
+  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  addon_name   = "external-dns"
+  depends_on = [ aws_eks_node_group.eks_nodes ]
 }
