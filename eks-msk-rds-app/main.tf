@@ -354,13 +354,23 @@ resource "aws_eks_cluster" "eks_msk_rds_app_eks_cluster" {
  
 }
 
+# The access entry resource no longer needs the kubernetes_groups argument
 resource "aws_eks_access_entry" "eks_admin_user" {
-  cluster_name      = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-  principal_arn     = "arn:aws:iam::623537709549:user/testUser"
-  kubernetes_groups = ["system:masters"]
+  cluster_name  = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  principal_arn = "arn:aws:iam::623537709549:user/testUser"
   depends_on = [
     aws_eks_cluster.eks_msk_rds_app_eks_cluster
   ]
+}
+
+# This new resource associates the admin policy with the access entry
+resource "aws_eks_access_policy_association" "eks_admin_policy_association" {
+  cluster_name    = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  principal_arn   = aws_eks_access_entry.eks_admin_user.principal_arn
+  policy_arn      = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+  access_scope {
+    type = "cluster"
+  }
 }
 
 # Amazon VPC CNI (Networking)
