@@ -373,7 +373,7 @@ resource "aws_eks_access_entry" "eks_admin_user" {
 resource "aws_eks_access_policy_association" "eks_admin_policy_association" {
   cluster_name    = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
   principal_arn   = aws_eks_access_entry.eks_admin_user.principal_arn
-  policy_arn      = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+  policy_arn      = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
   access_scope {
     type = "cluster"
   }
