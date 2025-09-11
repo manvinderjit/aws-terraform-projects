@@ -419,7 +419,7 @@ resource "aws_eks_node_group" "eks_nodes" {
     aws_subnet.eks_msk_rds_app_subnet_private_eks_1.id,
     aws_subnet.eks_msk_rds_app_subnet_private_eks_2.id
   ]
-  instance_types  = ["t3.micro"]
+  instance_types  = ["t3.medium"]
 
   scaling_config {
     desired_size = 2
