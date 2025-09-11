@@ -465,3 +465,59 @@ resource "aws_eks_addon" "external_dns" {
   addon_name   = "external-dns"
   depends_on = [ aws_eks_node_group.eks_nodes ]
 }
+
+resource "aws_security_group" "eks_msk_rds_app_sg_msk" {
+  name        = "eks-msk-rds-app-sg-msk"
+  description = "Security group for MSK cluster"
+  vpc_id      = aws_vpc.eks_msk_rds_app_vpc.id
+
+  ingress {
+    from_port       = 9092
+    to_port         = 9092
+    protocol        = "tcp"
+    security_groups = [aws_security_group.eks_msk_rds_app_sg_eks_node.id]
+    description     = "Allow Kafka traffic from EKS nodes"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "eks-msk-rds-app-sg-msk"
+  }
+}
+
+resource "aws_msk_cluster" "eks_msk_rds_app_msk_cluster" {
+  cluster_name           = "eks-msk-rds-app-msk-cluster"
+  kafka_version          = "3.8.0"
+  number_of_broker_nodes = 2
+  broker_node_group_info {
+    instance_type   = "kafka.t3.small"    
+    client_subnets  = [
+      aws_subnet.eks_msk_rds_app_subnet_private_msk_1.id,
+      aws_subnet.eks_msk_rds_app_subnet_private_msk_2.id,
+    ]
+    security_groups = [aws_security_group.eks_msk_rds_app_sg_msk.id]
+
+     storage_info {
+      ebs_storage_info {        
+        volume_size = 10
+      }
+    }
+  }
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "PLAINTEXT"
+      in_cluster    = false
+    }
+  }  
+
+  tags = {
+    Name = "eks-msk-rds-app-msk-cluster"
+  }
+}
