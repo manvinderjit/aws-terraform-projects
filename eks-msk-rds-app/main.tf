@@ -521,3 +521,41 @@ resource "aws_msk_cluster" "eks_msk_rds_app_msk_cluster" {
     Name = "eks-msk-rds-app-msk-cluster"
   }
 }
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+}
+
+provider "kubernetes" {
+  host                   = aws_eks_cluster.eks_msk_rds_app_eks_cluster.endpoint
+  cluster_ca_certificate = base64decode(aws_eks_cluster.eks_msk_rds_app_eks_cluster.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.cluster.token
+}
+
+resource "kubernetes_config_map" "aws_auth" {
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
+
+  data = {
+    mapRoles = yamlencode([
+      {
+        rolearn  = aws_iam_role.eks_node_group_role.arn
+        username = "system:node:{{EC2PrivateDNSName}}"
+        groups   = ["system:bootstrappers", "system:nodes"]
+      }
+    ])
+
+    mapUsers = yamlencode([
+      {
+        userarn  = "arn:aws:iam::623537709549:user/testUser"
+        username = "testUser"
+        groups   = ["system:masters"]
+      }
+    ])
+
+    
+  }
+}
+
