@@ -67,6 +67,8 @@ resource "aws_subnet" "eks_msk_rds_app_subnet_public_1" {
   map_public_ip_on_launch = true
   tags = {
     Name = "eks-msk-rds-app-subnet-public-1"
+    "kubernetes.io/role/elb"                  = "1"
+    "kubernetes.io/cluster/eks-msk-rds-app-cluster" = "owned"
   }
 }
 
@@ -77,6 +79,8 @@ resource "aws_subnet" "eks_msk_rds_app_subnet_public_2" {
   map_public_ip_on_launch = true
   tags = {
     Name = "eks-msk-rds-app-subnet-public-2"
+    "kubernetes.io/role/elb"                  = "1"
+    "kubernetes.io/cluster/eks-msk-rds-app-cluster" = "owned"
   }
 }
 
@@ -87,6 +91,8 @@ resource "aws_subnet" "eks_msk_rds_app_subnet_private_eks_1" {
   map_public_ip_on_launch = false
   tags = {
     Name = "eks-msk-rds-app-subnet-private-eks-1"
+    "kubernetes.io/role/elb"                  = "1"
+    "kubernetes.io/cluster/eks-msk-rds-app-cluster" = "owned"
   }
 }
 
@@ -97,6 +103,8 @@ resource "aws_subnet" "eks_msk_rds_app_subnet_private_eks_2" {
   map_public_ip_on_launch = false
   tags = {
     Name = "eks-msk-rds-app-subnet-private-eks-2"
+    "kubernetes.io/role/elb"                  = "1"
+    "kubernetes.io/cluster/eks-msk-rds-app-cluster" = "owned"
   }
 }
 
