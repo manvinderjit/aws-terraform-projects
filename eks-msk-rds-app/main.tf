@@ -326,145 +326,145 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSVPCResourceContr
 }
 
 
-resource "aws_eks_cluster" "eks_msk_rds_app_eks_cluster" {
-  name     = "eks-msk-rds-app-cluster"
-  role_arn = aws_iam_role.eks_msk_rds_app_eks_cluster_role.arn
-  version  = "1.33"
+# resource "aws_eks_cluster" "eks_msk_rds_app_eks_cluster" {
+#   name     = "eks-msk-rds-app-cluster"
+#   role_arn = aws_iam_role.eks_msk_rds_app_eks_cluster_role.arn
+#   version  = "1.33"
 
-  vpc_config {
-    subnet_ids              = [
-      aws_subnet.eks_msk_rds_app_subnet_private_eks_1.id,
-      aws_subnet.eks_msk_rds_app_subnet_private_eks_2.id
-    ]
-    endpoint_private_access = true
-    endpoint_public_access  = true
-    public_access_cidrs     = ["0.0.0.0/0"]
-  }
-  upgrade_policy {    
-    support_type = "STANDARD" 
-  }
+#   vpc_config {
+#     subnet_ids              = [
+#       aws_subnet.eks_msk_rds_app_subnet_private_eks_1.id,
+#       aws_subnet.eks_msk_rds_app_subnet_private_eks_2.id
+#     ]
+#     endpoint_private_access = true
+#     endpoint_public_access  = true
+#     public_access_cidrs     = ["0.0.0.0/0"]
+#   }
+#   upgrade_policy {    
+#     support_type = "STANDARD" 
+#   }
 
-  enabled_cluster_log_types = [] # No logs enabled
-  tags = {
-    Name = "eks-msk-rds-app-cluster"
-  }
+#   enabled_cluster_log_types = [] # No logs enabled
+#   tags = {
+#     Name = "eks-msk-rds-app-cluster"
+#   }
 
-  # Disable delete protection
-  deletion_protection = false
+#   # Disable delete protection
+#   deletion_protection = false
  
-}
+# }
 
-# Amazon VPC CNI (Networking)
-resource "aws_eks_addon" "vpc_cni" {
-  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-  addon_name   = "vpc-cni"
-  depends_on = [aws_eks_cluster.eks_msk_rds_app_eks_cluster]
-}
+# # Amazon VPC CNI (Networking)
+# resource "aws_eks_addon" "vpc_cni" {
+#   cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+#   addon_name   = "vpc-cni"
+#   depends_on = [aws_eks_cluster.eks_msk_rds_app_eks_cluster]
+# }
 
-# Kube Proxy (Networking)
-resource "aws_eks_addon" "kube_proxy" {
-  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-  addon_name   = "kube-proxy"
-  depends_on = [aws_eks_cluster.eks_msk_rds_app_eks_cluster]
-}
+# # Kube Proxy (Networking)
+# resource "aws_eks_addon" "kube_proxy" {
+#   cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+#   addon_name   = "kube-proxy"
+#   depends_on = [aws_eks_cluster.eks_msk_rds_app_eks_cluster]
+# }
 
-# EKS Pod Identity Agent (Security)
-resource "aws_eks_addon" "pod_identity_agent" {
-  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-  addon_name   = "eks-pod-identity-agent"
-  depends_on = [aws_eks_cluster.eks_msk_rds_app_eks_cluster]
-}
+# # EKS Pod Identity Agent (Security)
+# resource "aws_eks_addon" "pod_identity_agent" {
+#   cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+#   addon_name   = "eks-pod-identity-agent"
+#   depends_on = [aws_eks_cluster.eks_msk_rds_app_eks_cluster]
+# }
 
-# EKS Node Monitoring Agent (Observability)
-resource "aws_eks_addon" "node_monitoring_agent" {
-  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-  addon_name   = "eks-node-monitoring-agent"
-  depends_on = [aws_eks_cluster.eks_msk_rds_app_eks_cluster]
-}
+# # EKS Node Monitoring Agent (Observability)
+# resource "aws_eks_addon" "node_monitoring_agent" {
+#   cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+#   addon_name   = "eks-node-monitoring-agent"
+#   depends_on = [aws_eks_cluster.eks_msk_rds_app_eks_cluster]
+# }
 
 
-resource "aws_iam_role" "eks_node_group_role" {
-  name = "eks-node-group-role"
+# resource "aws_iam_role" "eks_node_group_role" {
+#   name = "eks-node-group-role"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        },
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Principal = {
+#           Service = "ec2.amazonaws.com"
+#         },
+#         Action = "sts:AssumeRole"
+#       }
+#     ]
+#   })
 
-  tags = {
-    Name = "eks-node-group-role"
-  }
-}
+#   tags = {
+#     Name = "eks-node-group-role"
+#   }
+# }
 
-resource "aws_iam_role_policy_attachment" "node_group_AmazonEKSWorkerNodePolicy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-  role       = aws_iam_role.eks_node_group_role.name
-}
+# resource "aws_iam_role_policy_attachment" "node_group_AmazonEKSWorkerNodePolicy" {
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+#   role       = aws_iam_role.eks_node_group_role.name
+# }
 
-resource "aws_iam_role_policy_attachment" "node_group_AmazonEKS_CNI_Policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-  role       = aws_iam_role.eks_node_group_role.name
-}
+# resource "aws_iam_role_policy_attachment" "node_group_AmazonEKS_CNI_Policy" {
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+#   role       = aws_iam_role.eks_node_group_role.name
+# }
 
-resource "aws_iam_role_policy_attachment" "node_group_AmazonEC2ContainerRegistryReadOnly" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-  role       = aws_iam_role.eks_node_group_role.name
-}
+# resource "aws_iam_role_policy_attachment" "node_group_AmazonEC2ContainerRegistryReadOnly" {
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+#   role       = aws_iam_role.eks_node_group_role.name
+# }
 
-resource "aws_eks_node_group" "eks_nodes" {
-  cluster_name    = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-  node_group_name = "eks-t3micro-ng"
-  node_role_arn   = aws_iam_role.eks_node_group_role.arn
-  subnet_ids      = [
-    aws_subnet.eks_msk_rds_app_subnet_private_eks_1.id,
-    aws_subnet.eks_msk_rds_app_subnet_private_eks_2.id
-  ]
-  instance_types  = ["t3.medium"]
+# resource "aws_eks_node_group" "eks_nodes" {
+#   cluster_name    = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+#   node_group_name = "eks-t3micro-ng"
+#   node_role_arn   = aws_iam_role.eks_node_group_role.arn
+#   subnet_ids      = [
+#     aws_subnet.eks_msk_rds_app_subnet_private_eks_1.id,
+#     aws_subnet.eks_msk_rds_app_subnet_private_eks_2.id
+#   ]
+#   instance_types  = ["t3.medium"]
 
-  scaling_config {
-    desired_size = 2
-    max_size     = 2
-    min_size     = 2
-  }
+#   scaling_config {
+#     desired_size = 2
+#     max_size     = 2
+#     min_size     = 2
+#   }
 
-  ami_type             = "AL2023_x86_64_STANDARD"
-  disk_size            = 20              
-  capacity_type        = "ON_DEMAND"
-  force_update_version = true
+#   ami_type             = "AL2023_x86_64_STANDARD"
+#   disk_size            = 20              
+#   capacity_type        = "ON_DEMAND"
+#   force_update_version = true
 
-  tags = {
-    Name = "eks-node-group-t3micro"
-  }
-}
+#   tags = {
+#     Name = "eks-node-group-t3micro"
+#   }
+# }
 
-# CoreDNS (Networking)
-resource "aws_eks_addon" "coredns" {
-  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-  addon_name   = "coredns"
-  depends_on = [ aws_eks_node_group.eks_nodes ]
-}
+# # CoreDNS (Networking)
+# resource "aws_eks_addon" "coredns" {
+#   cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+#   addon_name   = "coredns"
+#   depends_on = [ aws_eks_node_group.eks_nodes ]
+# }
 
-# Metrics Server (Observability)
-resource "aws_eks_addon" "metrics_server" {
-  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-  addon_name   = "metrics-server"
-  depends_on = [ aws_eks_node_group.eks_nodes ]
-}
+# # Metrics Server (Observability)
+# resource "aws_eks_addon" "metrics_server" {
+#   cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+#   addon_name   = "metrics-server"
+#   depends_on = [ aws_eks_node_group.eks_nodes ]
+# }
 
-# External DNS (Networking)
-resource "aws_eks_addon" "external_dns" {
-  cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-  addon_name   = "external-dns"
-  depends_on = [ aws_eks_node_group.eks_nodes ]
-}
+# # External DNS (Networking)
+# resource "aws_eks_addon" "external_dns" {
+#   cluster_name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+#   addon_name   = "external-dns"
+#   depends_on = [ aws_eks_node_group.eks_nodes ]
+# }
 
 resource "aws_security_group" "eks_msk_rds_app_sg_msk" {
   name        = "eks-msk-rds-app-sg-msk"
@@ -522,40 +522,40 @@ resource "aws_msk_cluster" "eks_msk_rds_app_msk_cluster" {
   }
 }
 
-data "aws_eks_cluster_auth" "cluster" {
-  name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-}
 
-provider "kubernetes" {
-  host                   = aws_eks_cluster.eks_msk_rds_app_eks_cluster.endpoint
-  cluster_ca_certificate = base64decode(aws_eks_cluster.eks_msk_rds_app_eks_cluster.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.cluster.token
-}
 
-resource "kubernetes_config_map" "aws_auth" {
-  metadata {
-    name      = "aws-auth"
-    namespace = "kube-system"
-  }
+# data "aws_eks_cluster_auth" "cluster" {
+#   name = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+# }
 
-  data = {
-    mapRoles = yamlencode([
-      {
-        rolearn  = aws_iam_role.eks_node_group_role.arn
-        username = "system:node:{{EC2PrivateDNSName}}"
-        groups   = ["system:bootstrappers", "system:nodes"]
-      }
-    ])
+# provider "kubernetes" {
+#   host                   = aws_eks_cluster.eks_msk_rds_app_eks_cluster.endpoint
+#   cluster_ca_certificate = base64decode(aws_eks_cluster.eks_msk_rds_app_eks_cluster.certificate_authority[0].data)
+#   token                  = data.aws_eks_cluster_auth.cluster.token
+# }
 
-    mapUsers = yamlencode([
-      {
-        userarn  = "arn:aws:iam::623537709549:user/testUser"
-        username = "testUser"
-        groups   = ["system:masters"]
-      }
-    ])
+# resource "kubernetes_config_map" "aws_auth" {
+#   metadata {
+#     name      = "aws-auth"
+#     namespace = "kube-system"
+#   }
 
-    
-  }
-}
+#   data = {
+#     mapRoles = yamlencode([
+#       {
+#         rolearn  = aws_iam_role.eks_node_group_role.arn
+#         username = "system:node:{{EC2PrivateDNSName}}"
+#         groups   = ["system:bootstrappers", "system:nodes"]
+#       }
+#     ])
+
+#     mapUsers = yamlencode([
+#       {
+#         userarn  = "arn:aws:iam::623537709549:user/testUser"
+#         username = "testUser"
+#         groups   = ["system:masters"]
+#       }
+#     ])    
+#   }
+# }
 
