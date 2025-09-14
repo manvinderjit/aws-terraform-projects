@@ -19,6 +19,7 @@ data "terraform_remote_state" "base_infra" {
   }
 }
 
+# Launch template - frontend
 resource "aws_launch_template" "frontend_lt" {
   name_prefix   = "three-tier-frontend-lt"
   image_id      = var.ec2_ami_id_frontend  

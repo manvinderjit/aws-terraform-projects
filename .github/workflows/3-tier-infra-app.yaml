@@ -187,7 +187,7 @@ jobs:
           AWS_TFSTATE_BUCKET_KEY_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
           AWS_TFSTATE_REGION: ${{ secrets.AWS_TFSTATE_REGION }}
           AWS_TFSTATE_LOCK_TABLE_NAME: ${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}
-          AMI_ID_FRONTEND: ${{ secrets.AMI_ID_FRONTEND }}
+          AMI_ID_FRONTEND: ${{ steps.get_frontend_ami_id.outputs.ami_id_frontend }}
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: terraform plan -out=frontendtfplan -no-color -var="ec2_ami_id_frontend=${AMI_ID_FRONTEND}" -var="tfstate_bucket=${AWS_TFSTATE_BUCKET_NAME}" -var="base_tfstate_key=3-tier-infra-app/${AWS_TFSTATE_BUCKET_KEY_NAME}" -var="tfstate_region=${AWS_TFSTATE_REGION}" -var="tfstate_lock_table=${AWS_TFSTATE_LOCK_TABLE_NAME}"
 
