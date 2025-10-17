@@ -206,7 +206,11 @@ jobs:
             -backend-config="key=3-tier-infra-app-frontend/${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}" \
             -backend-config="region=${{ secrets.AWS_TFSTATE_REGION }}" \
             -backend-config="dynamodb_table=${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}"
-          terraform destroy -auto-approve
+          terraform destroy -auto-approve \
+            -var="tfstate_bucket=${{ secrets.AWS_TFSTATE_BUCKET_NAME }}" \
+            -var="base_tfstate_key=3-tier-infra-app/${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}" \
+            -var="tfstate_region=${{ secrets.AWS_TFSTATE_REGION }}" \
+            -var="tfstate_lock_table=${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}"
 
       - name: Terraform Destroy Backend
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}
@@ -217,7 +221,11 @@ jobs:
             -backend-config="key=3-tier-infra-app-backend/${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}" \
             -backend-config="region=${{ secrets.AWS_TFSTATE_REGION }}" \
             -backend-config="dynamodb_table=${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}"
-          terraform destroy -auto-approve
+          terraform destroy -auto-approve \
+            -var="tfstate_bucket=${{ secrets.AWS_TFSTATE_BUCKET_NAME }}" \
+            -var="base_tfstate_key=3-tier-infra-app/${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}" \
+            -var="tfstate_region=${{ secrets.AWS_TFSTATE_REGION }}" \
+            -var="tfstate_lock_table=${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}" \
 
       - name: Terraform Destroy Base Infra + RDS
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}
