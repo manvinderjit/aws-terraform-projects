@@ -54,8 +54,6 @@ resource "aws_autoscaling_group" "backend_asg" {
     version = aws_launch_template.backend_lt.latest_version
   }
 
-   depends_on = [aws_lb_target_group.three_tier_infra_app_backend_tg]
-
   target_group_arns = [
     data.terraform_remote_state.base_infra.outputs.backend_target_group_arn
   ]
