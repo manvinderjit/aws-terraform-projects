@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-kafka-project-frontend
+  labels:
+    app: kafka-project-frontend
+spec:
+  type: LoadBalancer
+  selector:
+    app: kafka-project-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8081
