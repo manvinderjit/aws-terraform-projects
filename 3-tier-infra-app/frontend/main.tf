@@ -19,6 +19,7 @@ data "terraform_remote_state" "base_infra" {
   }
 }
 
+# Launch template - frontend
 resource "aws_launch_template" "frontend_lt" {
   name_prefix   = "three-tier-frontend-lt"
   image_id      = var.ec2_ami_id_frontend  
@@ -45,7 +46,7 @@ resource "aws_autoscaling_group" "frontend_asg" {
   min_size         = 1
   force_delete = true
 
-  vpc_zone_identifier = data.terraform_remote_state.base_infra.outputs.public_subnet_ids
+  vpc_zone_identifier = data.terraform_remote_state.base_infra.outputs.public_subnet_ids  
 
   launch_template {
     id      = aws_launch_template.frontend_lt.id
