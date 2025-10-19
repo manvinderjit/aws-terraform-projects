@@ -27,161 +27,58 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}  
 
 jobs:
-  build_push_base_alpine_java_image:    
+  deploy:        
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4        
-      
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION_TERRA }}
-      
-      - name: Log in to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+    defaults:
+      run:
+        shell: bash
+        working-directory: three-tier-infra-app-docker-ecr
 
-      - name: Build, tag, and push Docker image to ECR
-        env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION_TERRA: ${{ secrets.AWS_REGION_TERRA }}          
-          IMAGE_TAG: v1
-        run: |
-          IMAGE_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION_TERRA}.amazonaws.com/aws-terra-projects/base-alpine-java:${IMAGE_TAG}
-          docker build -t $IMAGE_URI three-tier-infra-app-docker-ecr/docker-files/base-alpine-java
-          docker push $IMAGE_URI
-    
-  build_push_app_image:
-    needs: build_push_base_alpine_java_image
-    runs-on: ubuntu-latest
     steps:
-      - name: Checkout main repo
+      - name: Checkout the repo
         uses: actions/checkout@v4
 
-      - name: Clone app source repo
-        run: |
-          git clone https://github.com/manvinderjit/react-springboot-test-app app
-      
-      - name: Set up JDK 21
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: '21'
-      
-      - name: Build JAR on runner
-        working-directory: ./app/combined
-        run: |
-          chmod +x mvnw
-          ./mvnw clean package -DskipTests
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION_TERRA }}
-
-      - name: Log in to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, and push App image to ECR
-        env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION_TERRA: ${{ secrets.AWS_REGION_TERRA }}
-          BASE_IMAGE_TAG: v1
-          APP_IMAGE_TAG: v1
-        run: |
-          BASE_IMAGE_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION_TERRA}.amazonaws.com/aws-terra-projects/base-alpine-java:${BASE_IMAGE_TAG}
-          APP_IMAGE_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION_TERRA}.amazonaws.com/aws-terra-projects/three-tier-infra-app-docker-ecr/movies-monolithic-app:${APP_IMAGE_TAG}
-
-          # Build the app image, passing base image as build-arg
-          docker build \
-            --build-arg BASE_IMAGE=$BASE_IMAGE_URI \
-            -t $APP_IMAGE_URI \
-            -f three-tier-infra-app-docker-ecr/docker-files/movies-app/Dockerfile \
-            ./app
-
-          docker push $APP_IMAGE_URI
-  
-  build_push_base_alpine_node_image:    
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4        
+          aws-region: ${{ secrets.AWS_REGION }}
       
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-          role-to-assume: ${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION_TERRA }}
-      
-      - name: Log in to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+          terraform_version: "1.12.2"
 
-      - name: Build, tag, and push Docker image to ECR
+      - name: Terraform Format
+        id: fmt
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform fmt -check
+        continue-on-error: true
+        
+      - name: Terraform Init
+        id: init        
         env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION_TERRA: ${{ secrets.AWS_REGION_TERRA }}          
-          IMAGE_TAG: v1
-        run: |
-          IMAGE_URI_BASE_NODEJS=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION_TERRA}.amazonaws.com/aws-terra-projects/base-alpine-nodejs:${IMAGE_TAG}
-          docker build -t $IMAGE_URI_BASE_NODEJS three-tier-infra-app-docker-ecr/docker-files/base-alpine-nodejs
-          docker push $IMAGE_URI_BASE_NODEJS  
-
-# docker run -e DB_HOST=your-db-host -e DB_USER=youruser -e DB_PASS=yourpass your-image:tag
-
-  # deploy:        
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       shell: bash
-  #       working-directory: three-tier-infra-app-docker-ecr
-
-  #   steps:
-  #     - name: Checkout the repo
-  #       uses: actions/checkout@v4
-
-  #     - name: Configure AWS credentials
-  #       uses: aws-actions/configure-aws-credentials@v4
-  #       with:
-  #         role-to-assume: ${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}
-  #         aws-region: ${{ secrets.AWS_REGION }}
-      
-  #     - name: Setup Terraform
-  #       uses: hashicorp/setup-terraform@v3
-  #       with:
-  #         terraform_version: "1.12.2"
-
-  #     - name: Terraform Format
-  #       id: fmt
-  #       if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-  #       run: terraform fmt -check
-  #       continue-on-error: true
+          AWS_TFSTATE_BUCKET_KEY_NAME : ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
+          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=three-tier-infra-app-docker-ecr/${AWS_TFSTATE_BUCKET_KEY_NAME}"
         
-  #     - name: Terraform Init
-  #       id: init        
-  #       env:
-  #         AWS_TFSTATE_BUCKET_KEY_NAME : ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
-  #         AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
-  #       run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=three-tier-infra-app-docker-ecr/${AWS_TFSTATE_BUCKET_KEY_NAME}"
-        
-  #     - name: Terraform Validate
-  #       id: validate
-  #       if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-  #       run: terraform validate -no-color
+      - name: Terraform Validate
+        id: validate
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform validate -no-color
       
-  #     - name: Terraform Plan
-  #       id: plan
-  #       if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-  #       run: terraform plan -out=tfplan -no-color -no-color -var="ec2_ami_id=${{ env.AMI_ID }}" -var="db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" -var="db_username=${{ secrets.AWS_THREE_TIER_RDS_DB_USER_NAME }}" -var="db_password=${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}"
+      - name: Terraform Plan
+        id: plan
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform plan -out=tfplan -no-color
 
-  #     - name: Terraform Apply
-  #       id: apply
-  #       if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-  #       run: terraform apply -auto-approve tfplan
+      - name: Terraform Apply
+        id: apply
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform apply -auto-approve tfplan
 
-  #     - name: Terraform Destroy
-  #       id: destroy
-  #       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}
-  #       run: terraform destroy -auto-approve
+      - name: Terraform Destroy
+        id: destroy
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}
+        run: terraform destroy -auto-approve
       
