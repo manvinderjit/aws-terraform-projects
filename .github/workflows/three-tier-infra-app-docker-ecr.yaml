@@ -1,11 +1,22 @@
-name: Deploy an EC2 with required IAM roles and read permissions for s3, create an AMI from it, and then create another EC2 from the AMI
+name: Deploy a three-tier app and infrastructure using docker and ecr
 
 on:
   push:
     paths:
-      - 'ec2-ami-ec2/**'
+      - 'three-tier-infra-app-docker-ecr/**'
     branches:
-      - project/ec2-ami-ec2
+      - 'project/3-tier-infra-app-docker-ecr'
+
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Terraform Action'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - destroy
 
 # These permissions are needed to interact with GitHub's OIDC Token endpoint.
 permissions:
@@ -18,13 +29,10 @@ env:
 jobs:
   deploy:        
     runs-on: ubuntu-latest
-    env:
-      TF_VAR_ec2_key_name: ${{ secrets.EC2_KEY_NAME }}
-    
     defaults:
       run:
         shell: bash
-        working-directory: ec2-ami-ec2
+        working-directory: three-tier-infra-app-docker-ecr
 
     steps:
       - name: Checkout the repo
@@ -43,25 +51,34 @@ jobs:
 
       - name: Terraform Format
         id: fmt
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: terraform fmt -check
-        continue-on-error: true      
+        continue-on-error: true
         
       - name: Terraform Init
         id: init        
         env:
           AWS_TFSTATE_BUCKET_KEY_NAME : ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
-          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}        
-        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=ec2-ami-ec2/${AWS_TFSTATE_BUCKET_KEY_NAME}"
+          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=three-tier-infra-app-docker-ecr/${AWS_TFSTATE_BUCKET_KEY_NAME}"
         
       - name: Terraform Validate
-        id: validate        
+        id: validate
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: terraform validate -no-color
       
       - name: Terraform Plan
         id: plan
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: terraform plan -out=tfplan -no-color
 
       - name: Terraform Apply
         id: apply
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Destroy
+        id: destroy
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}
+        run: terraform destroy -auto-approve
       

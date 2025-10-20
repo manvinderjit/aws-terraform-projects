@@ -1,0 +1,240 @@
+name: Deploy a 3-tier app and infrastructure
+
+on:
+  push:
+    paths:
+      - '3-tier-infra-app/**'
+    branches:
+      - project/3-tier-infra-app 
+
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Terraform Action'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - destroy
+
+# These permissions are needed to interact with GitHub's OIDC Token endpoint.
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}  
+
+jobs:
+  deploy-base-infra-rds:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: 3-tier-infra-app/base-infra-rds
+    outputs:
+      ami_id_backend: ${{ steps.get_backend_ami_id.outputs.ami_id_backend }}
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}     
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.12.2"
+
+      - name: Terraform Format
+        id: fmt
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform fmt -check
+        continue-on-error: true
+        
+      - name: Terraform Init
+        id: init        
+        env:
+          AWS_TFSTATE_BUCKET_KEY_NAME : ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
+          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=3-tier-infra-app/${AWS_TFSTATE_BUCKET_KEY_NAME}" -backend-config="region=${AWS_TFSTATE_REGION}" -backend-config="dynamodb_table=${AWS_TFSTATE_LOCK_TABLE_NAME}"
+        
+      - name: Terraform Validate
+        id: validate
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform validate -no-color
+      
+      - name: Terraform Plan
+        id: plan
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform plan -out=basetfplan -no-color -var="ec2_ami_id=${{ env.AMI_ID }}" -var="db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" -var="db_username=${{ secrets.AWS_THREE_TIER_RDS_DB_USER_NAME }}" -var="db_password=${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}"
+
+      - name: Terraform Apply
+        id: apply
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform apply -auto-approve basetfplan
+
+      - name: Get RDS endpoint
+        id: rds_endpoint
+        run: |
+          RDS_ENDPOINT=$(terraform output -raw rds_endpoint)
+          echo "RDS_ENDPOINT=$RDS_ENDPOINT" >> $GITHUB_ENV
+
+      - name: Print RDS Endpoint
+        run: echo "RDS Endpoint is $RDS_ENDPOINT"
+        env:
+          RDS_ENDPOINT: ${{ env.RDS_ENDPOINT }}
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@v2
+        with:
+          version: '1.10.0'
+
+      - name: Build Backend AMI
+        working-directory: 3-tier-infra-app
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: |
+          packer init .
+          packer build -var "aws_region=${{ env.AWS_REGION }}" -var "ami_name_app=three-tier-ami-be-app" -var "rds_endpoint=${{ env.RDS_ENDPOINT }}"  -var "rds_db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" app.pkr.hcl
+
+      - name: Get Backend AMI ID
+        working-directory: 3-tier-infra-app
+        id: get_backend_ami_id
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: |
+          AMI_ID_BACKEND=$(jq -r '.builds[0].artifact_id' packer-manifest-backend.json | cut -d':' -f2)
+          echo "AMI_ID_BACKEND=$AMI_ID_BACKEND" >> $GITHUB_ENV
+          echo "ami_id_backend=$AMI_ID_BACKEND" >> $GITHUB_OUTPUT
+
+      - name: Print AMI IDs
+        working-directory: 3-tier-infra-app
+        run: |
+          echo "Backend AMI ID: ${{ env.AMI_ID_BACKEND }}"
+
+      - name: Terraform Init        
+        id: init-backend
+        working-directory: 3-tier-infra-app/backend
+        env:
+          AWS_TFSTATE_BUCKET_KEY_NAME : ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}          
+          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=3-tier-infra-app-backend/${AWS_TFSTATE_BUCKET_KEY_NAME}" -backend-config="region=${AWS_TFSTATE_REGION}" -backend-config="dynamodb_table=${AWS_TFSTATE_LOCK_TABLE_NAME}"
+        
+      - name: Terraform Validate        
+        id: validate-backend
+        working-directory: 3-tier-infra-app/backend
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform validate -no-color
+      
+      - name: Terraform Plan
+        id: plan-backend
+        working-directory: 3-tier-infra-app/backend
+        env: 
+          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+          AWS_TFSTATE_BUCKET_KEY_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
+          AWS_TFSTATE_REGION: ${{ secrets.AWS_TFSTATE_REGION }}
+          AWS_TFSTATE_LOCK_TABLE_NAME: ${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform plan -out=backendtfplan -no-color -var="ec2_ami_id_backend=${{ env.AMI_ID_BACKEND }}" -var="db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" -var="db_username=${{ secrets.AWS_THREE_TIER_RDS_DB_USER_NAME }}" -var="db_password=${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}" -var="tfstate_bucket=${{ env.AWS_TFSTATE_BUCKET_NAME }}" -var="base_tfstate_key=3-tier-infra-app/${{ env.AWS_TFSTATE_BUCKET_KEY_NAME }}" -var="tfstate_region=${{ env.AWS_TFSTATE_REGION }}" -var="tfstate_lock_table=${{ env.AWS_TFSTATE_LOCK_TABLE_NAME }}" -var "rds_endpoint=${{ env.RDS_ENDPOINT }}"
+
+      - name: Terraform Apply
+        id: apply-backend
+        working-directory: 3-tier-infra-app/backend
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform apply -auto-approve backendtfplan
+
+      - name: Build Frontend AMI
+        working-directory: 3-tier-infra-app
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: |
+          packer init .
+          packer build -var "ami_name_web=three-tier-ami-fe-web" -var "backend_alb_dns=${{ env.PRIVATE_ALB_DNS }}" web.pkr.hcl
+
+      - name: Get Frontend AMI ID
+        working-directory: 3-tier-infra-app
+        id: get_frontend_ami_id
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: |
+          AMI_ID_FRONTEND=$(jq -r '.builds[0].artifact_id' packer-manifest-frontend.json | cut -d':' -f2)
+          echo "AMI_ID_FRONTEND=$AMI_ID_FRONTEND" >> $GITHUB_ENV
+          echo "ami_id_frontend=$AMI_ID_FRONTEND" >> $GITHUB_OUTPUT
+
+      - name: Terraform Init        
+        id: init-frontend
+        working-directory: 3-tier-infra-app/frontend
+        env:
+          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+          AWS_TFSTATE_BUCKET_KEY_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
+          AWS_TFSTATE_REGION: ${{ secrets.AWS_TFSTATE_REGION }}
+          AWS_TFSTATE_LOCK_TABLE_NAME: ${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=3-tier-infra-app-frontend/${AWS_TFSTATE_BUCKET_KEY_NAME}" -backend-config="region=${AWS_TFSTATE_REGION}" -backend-config="dynamodb_table=${AWS_TFSTATE_LOCK_TABLE_NAME}"
+
+      - name: Terraform Validate        
+        id: validate-frontend
+        working-directory: 3-tier-infra-app/frontend
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan-frontend
+        working-directory: 3-tier-infra-app/frontend
+        env: 
+          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+          AWS_TFSTATE_BUCKET_KEY_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
+          AWS_TFSTATE_REGION: ${{ secrets.AWS_TFSTATE_REGION }}
+          AWS_TFSTATE_LOCK_TABLE_NAME: ${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}
+          AMI_ID_FRONTEND: ${{ steps.get_frontend_ami_id.outputs.ami_id_frontend }}
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform plan -out=frontendtfplan -no-color -var="ec2_ami_id_frontend=${AMI_ID_FRONTEND}" -var="tfstate_bucket=${AWS_TFSTATE_BUCKET_NAME}" -var="base_tfstate_key=3-tier-infra-app/${AWS_TFSTATE_BUCKET_KEY_NAME}" -var="tfstate_region=${AWS_TFSTATE_REGION}" -var="tfstate_lock_table=${AWS_TFSTATE_LOCK_TABLE_NAME}"
+
+      - name: Terraform Apply
+        id: apply-frontend
+        working-directory: 3-tier-infra-app/frontend
+        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        run: terraform apply -auto-approve frontendtfplan
+
+      - name: Terraform Destroy Frontend
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}
+        working-directory: 3-tier-infra-app/frontend
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.AWS_TFSTATE_BUCKET_NAME }}" \
+            -backend-config="key=3-tier-infra-app-frontend/${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}" \
+            -backend-config="region=${{ secrets.AWS_TFSTATE_REGION }}" \
+            -backend-config="dynamodb_table=${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}"
+          terraform destroy -auto-approve \
+            -var="tfstate_bucket=${{ secrets.AWS_TFSTATE_BUCKET_NAME }}" \
+            -var="base_tfstate_key=3-tier-infra-app/${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}" \
+            -var="tfstate_region=${{ secrets.AWS_TFSTATE_REGION }}" \
+            -var="tfstate_lock_table=${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}"
+
+      - name: Terraform Destroy Backend
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}
+        working-directory: 3-tier-infra-app/backend
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.AWS_TFSTATE_BUCKET_NAME }}" \
+            -backend-config="key=3-tier-infra-app-backend/${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}" \
+            -backend-config="region=${{ secrets.AWS_TFSTATE_REGION }}" \
+            -backend-config="dynamodb_table=${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}"
+          terraform destroy -auto-approve \
+            -var="tfstate_bucket=${{ secrets.AWS_TFSTATE_BUCKET_NAME }}" \
+            -var="base_tfstate_key=3-tier-infra-app/${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}" \
+            -var="tfstate_region=${{ secrets.AWS_TFSTATE_REGION }}" \
+            -var="tfstate_lock_table=${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}" \
+
+      - name: Terraform Destroy Base Infra + RDS
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}
+        working-directory: 3-tier-infra-app/base-infra-rds
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.AWS_TFSTATE_BUCKET_NAME }}" \
+            -backend-config="key=3-tier-infra-app/${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}" \
+            -backend-config="region=${{ secrets.AWS_TFSTATE_REGION }}" \
+            -backend-config="dynamodb_table=${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}"
+          terraform destroy -auto-approve
+      
