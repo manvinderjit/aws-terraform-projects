@@ -9,8 +9,9 @@ This repository contains multiple folders, each of which is a standalone deploym
 | Folder                                                                    | Description                                                                                                                                                                                  |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [1. Three Tier Infrastructure React Springboot RDS App](3-tier-infra-app) | Complete AWS three-tier infrastructure using Terraform, Packer, and GitHub Actions — deploying a **React frontend**, **Spring Boot backend**, and **MySQL database** via CI/CD.              |
-| [2. EKS MSK RDS App](eks-msk-rds-app)                                     | Kubernetes-based three-tier application on AWS using **EKS**, **MSK (Kafka)**, and **RDS** — showcasing event-driven architecture with real-time data streaming and container orchestration. |
-| [3. EC2 AMI EC2](ec2-ami-ec2)                                             | AWS AMI creation and deployment demonstration using **Terraform** — showcasing custom **AMI creation** from EC2 instances and **infrastructure replication** workflows.                      |
+| [2. Three Tier EKS MSK RDS App](eks-msk-rds-app)                                     | Kubernetes-based three-tier application on AWS using **EKS**, **MSK (Kafka)**, and **RDS** — showcasing event-driven architecture with real-time data streaming and container orchestration. |
+| [3. AMI Creation EC2 AMI EC2](ec2-ami-ec2)                                             | AWS AMI creation and deployment demonstration using **Terraform** — showcasing custom **AMI creation** from EC2 instances and **infrastructure replication** workflows.                      |
+| [4. VPC Networking Fundamentals Subnet EC2 RDS](subnet-ec2-rds)                                       | AWS VPC networking fundamentals with **EC2** and **RDS (PostgreSQL)** — demonstrating **subnet design**, **security groups**, and **database connectivity** patterns.                       |
 
 ---
 
@@ -81,5 +82,28 @@ This project demonstrates **AWS AMI (Amazon Machine Image) creation and replicat
 **Key Features**: Golden AMI creation, infrastructure standardization, rapid deployment workflows, and configuration consistency across instances.
 
 **Use Cases**: Perfect for learning AMI management, server standardization, disaster recovery scenarios, and understanding fundamental AWS compute patterns.
+
+---
+
+## [4. Subnet EC2 RDS](subnet-ec2-rds/README.md)
+
+### **VPC Networking Fundamentals (VPC + EC2 + RDS)**
+
+#### **Summary:**
+
+This project demonstrates **AWS VPC networking fundamentals** with EC2 and RDS integration using Terraform. It showcases essential networking concepts including subnets, route tables, security groups, and secure database connectivity patterns.
+
+**Description:**
+
+- **Custom VPC**: Isolated network environment (10.0.0.0/16) with DNS support and hostname resolution
+- **Multi-Subnet Design**: Public subnet for web server and private subnets for database across multiple availability zones
+- **EC2 Web Server**: t2.micro instance in public subnet running Apache HTTP server with custom content
+- **PostgreSQL RDS**: Database instance in private subnets with no public internet access for security
+- **Security Groups**: Network-level controls allowing HTTP access to web server and database access only from EC2
+- **Route Tables**: Proper traffic routing with internet gateway for public subnet and local-only routing for private subnets
+
+**Key Features**: VPC fundamentals, subnet isolation, security group best practices, multi-AZ database design, and secure EC2-RDS connectivity.
+
+**Learning Objectives**: Perfect for understanding AWS networking basics, security group configurations, database isolation patterns, and infrastructure-as-code networking implementations.
 
 ---
