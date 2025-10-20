@@ -10,6 +10,7 @@ This repository contains multiple folders, each of which is a standalone deploym
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [1. Three Tier Infrastructure React Springboot RDS App](3-tier-infra-app) | Complete AWS three-tier infrastructure using Terraform, Packer, and GitHub Actions — deploying a **React frontend**, **Spring Boot backend**, and **MySQL database** via CI/CD.              |
 | [2. EKS MSK RDS App](eks-msk-rds-app)                                     | Kubernetes-based three-tier application on AWS using **EKS**, **MSK (Kafka)**, and **RDS** — showcasing event-driven architecture with real-time data streaming and container orchestration. |
+| [3. EC2 AMI EC2](ec2-ami-ec2)                                             | AWS AMI creation and deployment demonstration using **Terraform** — showcasing custom **AMI creation** from EC2 instances and **infrastructure replication** workflows.                      |
 
 ---
 
@@ -57,5 +58,28 @@ It showcases modern cloud-native architecture with **real-time event streaming**
 - **Container-Native**: Kubernetes manifests with ConfigMaps, Secrets, and health checks for production-ready deployment
 
 **Key Features**: Real-time event streaming, Kubernetes-native scaling, managed AWS services integration, and comprehensive monitoring capabilities.
+
+---
+
+## [3. EC2 AMI EC2](ec2-ami-ec2/README.md)
+
+### **Custom AMI Creation and Deployment (EC2 + AMI Management)**
+
+#### **Summary:**
+
+This project demonstrates **AWS AMI (Amazon Machine Image) creation and replication** using Terraform. It showcases the fundamental process of creating custom AMIs from running EC2 instances and using those AMIs to deploy identical infrastructure.
+
+**Description:**
+
+- **EC2 Deployment**: Initial t2.micro instance with custom configuration and user data script
+- **AMI Creation**: Automated custom AMI generation from the configured EC2 instance using Terraform
+- **Instance Replication**: New EC2 instances deployed from the custom AMI, ensuring identical configuration
+- **IAM Integration**: EC2 instances configured with S3 read-only access via IAM roles and instance profiles
+- **Security Configuration**: Security groups allowing HTTP (80) and SSH (22) access with proper network controls
+- **Infrastructure as Code**: Complete Terraform automation for AMI lifecycle management
+
+**Key Features**: Golden AMI creation, infrastructure standardization, rapid deployment workflows, and configuration consistency across instances.
+
+**Use Cases**: Perfect for learning AMI management, server standardization, disaster recovery scenarios, and understanding fundamental AWS compute patterns.
 
 ---
