@@ -44,10 +44,7 @@ jobs:
       - name: Terraform Format
         id: fmt
         run: terraform fmt -check
-        continue-on-error: true
-      
-      - name: Check AWS Identity
-        run: aws sts get-caller-identity
+        continue-on-error: true      
         
       - name: Terraform Init
         id: init        
