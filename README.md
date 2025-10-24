@@ -47,6 +47,11 @@ This project demonstrates a complete **event-driven three-tier application** dep
 
 It showcases modern cloud-native architecture with **real-time event streaming**, **container orchestration**, and **managed AWS services**.
 
+![Infrastructure Architecture Diagram](./eks-msk-rds-app/images/1-3-tier-eks-msk-rds-app-infra.png)
+
+
+![Integration Diagram](./eks-msk-rds-app/images/3-tier-eks-msk-rds-app-traffic-flow.png)
+
 **Application Source**: [react-springboot-kafka-apps](https://github.com/manvinderjit/react-springboot-kafka-apps)
 
 **Description:**
@@ -54,7 +59,7 @@ It showcases modern cloud-native architecture with **real-time event streaming**
 - **EKS Cluster**: Managed Kubernetes with worker nodes in private subnets, complete with essential addons (VPC CNI, CoreDNS, Metrics Server)
 - **Event Streaming**: MSK (Kafka) cluster for real-time message processing between React frontend and Spring Boot backend
 - **Database**: MySQL RDS in isolated database subnets for persistent data storage
-- **Application**: Event-driven React UI with Spring Boot API, featuring real-time analytics dashboard and live event processing
+- **Application**: ThymeLeaf Java UI with Spring Boot API, featuring real-time analytics dashboard and live event processing
 - **Infrastructure as Code**: Complete Terraform automation with GitHub Actions CI/CD pipeline
 - **Container-Native**: Kubernetes manifests with ConfigMaps, Secrets, and health checks for production-ready deployment
 

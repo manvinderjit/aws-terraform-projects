@@ -10,13 +10,27 @@ This project demonstrates a complete **three-tier Kubernetes application** deplo
 
 ![Architecture](https://img.shields.io/badge/Architecture-EKS%20%2B%20MSK%20%2B%20RDS-blue)
 
+### Infrastructure Diagram
+![Infrastructure Architecture Diagram](./images/1-3-tier-eks-msk-rds-app-infra.png)
+*Infrastructure Diagram showing the architecture deployed to AWS for the 3 Tier application.*
+
+
+### Network Architecture:
+- **Public Subnets**: EKS LoadBalancer services
+- **Private Subnets**: EKS worker nodes, MSK brokers
+- **Database Subnets**: RDS instances (isolated)
+
 The stack includes:
 
-- **Frontend (React)** - Event-driven UI for real-time data visualization
+- **Frontend (Java ThymeLeaf)** - Event-driven template engine UI for real-time data visualization
 - **Backend (Spring Boot)** - REST API with Kafka producer/consumer integration  
 - **Database (MySQL RDS)** - Persistent storage for application data
 - **Message Queue (MSK)** - Event streaming between frontend and backend
 - **Container Orchestration (EKS)** - Managed Kubernetes cluster
+
+### Integration Diagram
+![Integration Diagram](./images/3-tier-eks-msk-rds-app-traffic-flow.png)
+*Integration Diagram showing how the tiers are integrated and communicate.*
 
 ### Application Features:
 - **Real-time Events**: Frontend publishes events via Kafka
@@ -24,10 +38,6 @@ The stack includes:
 - **Data Persistence**: Events stored in MySQL database
 - **Live Updates**: Real-time UI updates through event streaming
 
-### Network Architecture:
-- **Public Subnets**: EKS LoadBalancer services
-- **Private Subnets**: EKS worker nodes, MSK brokers
-- **Database Subnets**: RDS instances (isolated)
 
 ---
 
@@ -39,7 +49,7 @@ The stack includes:
 | **Container Orchestration** | Amazon EKS | Kubernetes cluster management |
 | **Message Streaming** | Amazon MSK | Managed Kafka service |
 | **Database** | Amazon RDS (MySQL) | Managed relational database |
-| **Frontend** | React | Event-driven web interface |
+| **Frontend** | ThymeLeaf + Java | Event-driven web interface |
 | **Backend** | Spring Boot + Kafka | REST API with event streaming |
 | **CI/CD** | GitHub Actions | Automated infrastructure deployment |
 
@@ -182,7 +192,7 @@ kubectl get service service-kafka-project-frontend
 
 Once deployed, the application provides:
 
-1. **Event Creation**: Use the React frontend to create and publish events
+1. **Event Creation**: Use the ThymeLeaf Java frontend to create and publish events
 2. **Real-time Processing**: Events are processed through Kafka and stored in MySQL
 3. **Live Updates**: Frontend displays real-time updates as events are processed
 4. **API Access**: Backend exposes REST endpoints for event management
@@ -192,15 +202,15 @@ Once deployed, the application provides:
 ## 📸 Application Screenshots
 
 ### Main Application Interface
-![Application Index](./images/1-ads-index.png)
+![Application Index](./images/2-ads-index.png)
 *Main application interface for event management and real-time data visualization*
 
 ### Analytics Dashboard
-![Analytics Dashboard](./images/2-analytics-dash-full.png)
+![Analytics Dashboard](./images/3-analytics-dash-full.png)
 *Real-time analytics dashboard showing event processing and data insights*
 
 ### Event Logs
-![Raw Event Logs](./images/3-raw-event-logs.png)
+![Raw Event Logs](./images/4-raw-event-logs.png)
 *Raw event logs displaying Kafka message processing and database interactions*
 
 ---
@@ -308,7 +318,7 @@ kubectl delete -f k8-manifests/backend/
 - ✅ **Production-Ready**: Health checks, resource limits, secrets management
 - ✅ **Scalable**: Kubernetes-native with horizontal pod autoscaling ready
 - ✅ **Secure**: Network isolation, security groups, encrypted secrets
-- ✅ **Event-Driven**: Real-time Kafka integration with React frontend and Spring Boot backend
+- ✅ **Event-Driven**: Real-time Kafka integration with ThymeLeaf Java frontend and Spring Boot backend
 - ✅ **Managed Services**: EKS, MSK, and RDS for reduced operational overhead
 - ✅ **Infrastructure as Code**: Complete Terraform automation
 - ✅ **GitOps Ready**: Kubernetes manifests with ConfigMap externalization
