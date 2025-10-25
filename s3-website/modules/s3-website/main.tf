@@ -3,10 +3,6 @@
 # S3 Bucket for website hosting
 resource "aws_s3_bucket" "website" {
   bucket = "${var.bucket_name}"
-
-  tags = {
-    Environment = var.environment
-  }
 }
 
 # S3 Bucket versioning
