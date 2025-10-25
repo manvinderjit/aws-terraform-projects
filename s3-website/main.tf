@@ -1,7 +1,13 @@
-resource "aws_s3_bucket" "example" {
+# S3 Website Infrastructure
 
-  tags = {
-    ManagedBy = "GitAwsTerraformProjects"
-    Project   = "GitAwsTerraformProjects"
-  }
+# S3 Website Module
+module "s3_website" {
+  source = "./modules/s3-website"
+
+  bucket_name               = var.bucket_name
+  environment               = var.environment
+  index_document            = var.index_document
+  error_document            = var.error_document
+  path_source_website_files = "${path.root}/website-content"
+  tags = var.tags
 }

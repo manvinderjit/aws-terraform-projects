@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Static Website</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <h1>Manvinder's Website</h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <h2>Welcome to My Static Website</h2>
+                <p>This is a sample static website hosted on AWS S3 with CloudFront CDN.</p>
+                <button class="cta-button">Get Started</button>
+            </div>
+        </section>
+
+        <section id="about" class="section">
+            <div class="container">
+                <h2>About Us</h2>
+                <p>This website demonstrates a modern static site architecture using:</p>
+                <ul>
+                    <li>AWS S3 for hosting</li>
+                    <li>CloudFront for global CDN</li>                    
+                    <li>Terraform for infrastructure as code</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="services" class="section">
+            <div class="container">
+                <h2>Features</h2>
+                <div class="features-grid">
+                    <div class="feature">
+                        <h3>Fast Loading</h3>
+                        <p>Global CDN ensures fast content delivery worldwide.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>Secure</h3>
+                        <p>HTTPS encryption and AWS security best practices.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>Scalable</h3>
+                        <p>Automatically scales to handle traffic spikes.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Manvinder's Website. Powered by AWS and Terraform.</p>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

@@ -1,12 +1,7 @@
-# Core Configuration
-variable "aws_region" {
-  type        = string
-  default     = "us-east-1"
-  description = "AWS region"
-}
+# S3 Website Module - Variables
 
 variable "bucket_name" {
-  description = "Base name for the S3 bucket (will have random suffix added)"
+  description = "Base name for the S3 bucket (suffix will be added for uniqueness)"
   type        = string
   validation {
     condition     = can(regex("^[a-z0-9][a-z0-9-]*[a-z0-9]$", var.bucket_name))
@@ -17,14 +12,12 @@ variable "bucket_name" {
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string
-  default     = "dev"
   validation {
     condition     = contains(["dev", "staging", "prod"], var.environment)
     error_message = "Environment must be one of: dev, staging, prod."
   }
 }
 
-# S3 Website Configuration
 variable "index_document" {
   description = "Index document for the website"
   type        = string
@@ -37,12 +30,16 @@ variable "error_document" {
   default     = "error.html"
 }
 
-# Global Tags
 variable "tags" {
-  description = "Additional tags to apply to all resources"
+  description = "Additional tags to apply to resources"
   type        = map(string)
   default = {
     ManagedBy = "GitAwsTerraformProjects"
     Project   = "S3Website"
   }
+}
+
+variable "path_source_website_files" {
+  description = "Path within the modules from where the website files will be copied"
+  type        = string
 }
