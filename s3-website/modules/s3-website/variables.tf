@@ -1,7 +1,7 @@
 # S3 Website Module - Variables
 
 variable "bucket_name" {
-  description = "Base name for the S3 bucket (suffix will be added for uniqueness)"
+  description = "Base name for the S3 bucket"
   type        = string
   validation {
     condition     = can(regex("^[a-z0-9][a-z0-9-]*[a-z0-9]$", var.bucket_name))
