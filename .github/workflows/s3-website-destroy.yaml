@@ -1,17 +1,17 @@
 name: Destroy S3 Website Infrastructure
 
 on:
-  workflow_dispatch:  # Manual trigger from GitHub UI
+  workflow_dispatch: # Manual trigger from GitHub UI
     inputs:
       confirm_destroy:
         description: 'Type "DESTROY" to confirm deletion of all resources'
         required: true
         type: string
       bucket_name:
-        description: 'S3 bucket name to destroy (must match deployed bucket)'
+        description: "S3 bucket name to destroy (must match deployed bucket)"
         required: true
         type: string
-        default: 'aws-terra-projects-manvinderjit-s3-website'
+        default: "aws-terra-projects-manvinderjit-s3-website"
 
 # These permissions are needed to interact with GitHub's OIDC Token endpoint.
 permissions:
@@ -30,6 +30,9 @@ jobs:
         working-directory: s3-website
 
     steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
       - name: Validate Confirmation
         run: |
           if [ "${{ github.event.inputs.confirm_destroy }}" != "DESTROY" ]; then
@@ -37,9 +40,6 @@ jobs:
             exit 1
           fi
           echo "Confirmation validated. Proceeding with destroy..."
-
-      - name: Checkout the repo
-        uses: actions/checkout@v4
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
