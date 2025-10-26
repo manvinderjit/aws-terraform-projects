@@ -6,6 +6,7 @@ on:
       - 's3-website/**'
     branches:
       - project/s3-website 
+  workflow_dispatch:
 
 # These permissions are needed to interact with GitHub's OIDC Token endpoint.
 permissions:
