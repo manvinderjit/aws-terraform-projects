@@ -1,4 +1,4 @@
-name: Destroy S3 Website Infrastructure
+name: Destroy the S3 Cloudfront Website Infrastructure
 
 on:
   workflow_dispatch: # Manual trigger from GitHub UI
