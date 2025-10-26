@@ -9,9 +9,10 @@ This repository contains multiple folders, each of which is a standalone deploym
 | Folder                                                                    | Description                                                                                                                                                                                  |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [1. Three Tier Infrastructure React Springboot RDS App](3-tier-infra-app) | Complete AWS three-tier infrastructure using Terraform, Packer, and GitHub Actions — deploying a **React frontend**, **Spring Boot backend**, and **MySQL database** via CI/CD.              |
-| [2. Three Tier EKS MSK RDS App](eks-msk-rds-app)                                     | Kubernetes-based three-tier application on AWS using **EKS**, **MSK (Kafka)**, and **RDS** — showcasing event-driven architecture with real-time data streaming and container orchestration. |
-| [3. AMI Creation EC2 AMI EC2](ec2-ami-ec2)                                             | AWS AMI creation and deployment demonstration using **Terraform** — showcasing custom **AMI creation** from EC2 instances and **infrastructure replication** workflows.                      |
-| [4. VPC Networking Fundamentals Subnet EC2 RDS](subnet-ec2-rds)                                       | AWS VPC networking fundamentals with **EC2** and **RDS (PostgreSQL)** — demonstrating **subnet design**, **security groups**, and **database connectivity** patterns.                       |
+| [2. Three Tier EKS MSK RDS App](eks-msk-rds-app)                          | Kubernetes-based three-tier application on AWS using **EKS**, **MSK (Kafka)**, and **RDS** — showcasing event-driven architecture with real-time data streaming and container orchestration. |
+| [3. AMI Creation EC2 AMI EC2](ec2-ami-ec2)                                | AWS AMI creation and deployment demonstration using **Terraform** — showcasing custom **AMI creation** from EC2 instances and **infrastructure replication** workflows.                      |
+| [4. VPC Networking Fundamentals Subnet EC2 RDS](subnet-ec2-rds)           | AWS VPC networking fundamentals with **EC2** and **RDS (PostgreSQL)** — demonstrating **subnet design**, **security groups**, and **database connectivity** patterns.                        |
+| [5. S3 Static Website with CloudFront](s3-website)                        | Simple, cost-effective static website hosting using **S3** and **CloudFront** — featuring automatic content deployment, secure access controls, and CI/CD workflows.                         |
 
 ---
 
@@ -48,7 +49,6 @@ This project demonstrates a complete **event-driven three-tier application** dep
 It showcases modern cloud-native architecture with **real-time event streaming**, **container orchestration**, and **managed AWS services**.
 
 ![Infrastructure Architecture Diagram](./eks-msk-rds-app/images/1-3-tier-eks-msk-rds-app-infra.png)
-
 
 ![Integration Diagram](./eks-msk-rds-app/images/3-tier-eks-msk-rds-app-traffic-flow.png)
 
@@ -110,5 +110,28 @@ This project demonstrates **AWS VPC networking fundamentals** with EC2 and RDS i
 **Key Features**: VPC fundamentals, subnet isolation, security group best practices, multi-AZ database design, and secure EC2-RDS connectivity.
 
 **Learning Objectives**: Perfect for understanding AWS networking basics, security group configurations, database isolation patterns, and infrastructure-as-code networking implementations.
+
+---
+
+## [5. S3 Static Website with CloudFront](s3-website/README.md)
+
+### **Static Website Hosting (S3 + CloudFront + GitHub Actions)**
+
+#### **Summary:**
+
+This project demonstrates **simple, cost-effective static website hosting** on AWS using **S3** and **CloudFront**. It features automatic content deployment, secure access controls, and complete CI/CD workflows for both deployment and destruction.
+
+**Description:**
+
+- **S3 Bucket**: Private bucket with automatic file upload and proper MIME type detection for HTML, CSS, JS, and image files
+- **CloudFront CDN**: Global content delivery with default SSL certificate, Origin Access Control (OAC), and optimized caching
+- **Automatic Deployment**: Terraform uploads website content directly from local files with change detection via ETags
+- **Security**: Private S3 bucket secured via CloudFront OAC, HTTPS by default, no public bucket access
+- **CI/CD Workflows**: GitHub Actions for automated deployment on push and manual infrastructure destruction with safety confirmations
+- **Cost Optimization**: Uses cheapest CloudFront price class, no versioning, and minimal logging for development use
+
+**Key Features**: Automatic content deployment, secure access patterns, default HTTPS, GitHub Actions integration, and comprehensive safety controls for infrastructure management.
+
+**Use Cases**: Perfect for portfolios, documentation sites, marketing pages, and learning AWS static hosting fundamentals with modern DevOps practices.
 
 ---
