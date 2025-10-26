@@ -65,7 +65,7 @@ variable "price_class" {
   type        = string
   default     = "PriceClass_100"
   validation {
-    condition     = contains(["PriceClass_All", "PriceClass_200", "PriceClass_100"], var.cloudfront_price_class)
+    condition     = contains(["PriceClass_All", "PriceClass_200", "PriceClass_100"], var.price_class)
     error_message = "Price class must be one of: PriceClass_All, PriceClass_200, PriceClass_100."
   }
 }
