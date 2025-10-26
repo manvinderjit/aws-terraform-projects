@@ -1,4 +1,4 @@
-name: Deploy an S3 Bucket
+name: Deploy an S3 Static Website with CloudFront CDN
 
 on:
   push:

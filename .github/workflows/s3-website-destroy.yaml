@@ -1,0 +1,91 @@
+name: Destroy S3 Website Infrastructure
+
+on:
+  workflow_dispatch:  # Manual trigger from GitHub UI
+    inputs:
+      confirm_destroy:
+        description: 'Type "DESTROY" to confirm deletion of all resources'
+        required: true
+        type: string
+      bucket_name:
+        description: 'S3 bucket name to destroy (must match deployed bucket)'
+        required: true
+        type: string
+        default: 'aws-terra-projects-manvinderjit-s3-website'
+
+# These permissions are needed to interact with GitHub's OIDC Token endpoint.
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: s3-website
+
+    steps:
+      - name: Validate Confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm_destroy }}" != "DESTROY" ]; then
+            echo "Confirmation failed. You must type 'DESTROY' exactly to proceed."
+            exit 1
+          fi
+          echo "Confirmation validated. Proceeding with destroy..."
+
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.12.2"
+
+      - name: Terraform Init
+        id: init
+        env:
+          AWS_TFSTATE_BUCKET_KEY_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
+          AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=s3-website/${AWS_TFSTATE_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+
+      - name: Terraform Plan Destroy
+        id: plan-destroy
+        run: |
+          echo "Planning destroy operation..."
+          terraform plan -destroy -var="bucket_name=${{ github.event.inputs.bucket_name }}" -var="aws_region=us-east-2" -out=destroy-plan -no-color
+
+      - name: Show Destroy Plan
+        run: |
+          echo "Resources that will be DESTROYED:"
+          terraform show destroy-plan
+
+      - name: Empty S3 Bucket Before Destroy
+        run: |
+          echo "Emptying S3 bucket before destroy..."
+          aws s3 rm s3://${{ github.event.inputs.bucket_name }} --recursive || echo "Bucket may already be empty or not exist"
+
+      - name: Terraform Destroy
+        id: destroy
+        run: |
+          echo "Destroying infrastructure..."
+          terraform apply -auto-approve destroy-plan
+
+      - name: Destroy Complete
+        run: |
+          echo "S3 Website infrastructure has been successfully destroyed!"
+          echo "Destroyed resources:"
+          echo "   - S3 Bucket: ${{ github.event.inputs.bucket_name }}"
+          echo "   - CloudFront Distribution"
+          echo "   - Origin Access Control"
+          echo "   - S3 Bucket Policy"
