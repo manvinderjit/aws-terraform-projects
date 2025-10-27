@@ -103,9 +103,9 @@ jobs:
         id: configure_kubectl
         run: |
           echo "Configuring kubectl for EKS cluster..."
-          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name eks-msk-rds-app-cluster
+          aws eks update-kubeconfig --region us-east-2 --name eks-msk-rds-app-cluster
           kubectl cluster-info
-          echo "kubectl configured"
+          echo "✅ kubectl configured"
 
       - name: Deploy Kubernetes Applications
         id: deploy_k8s

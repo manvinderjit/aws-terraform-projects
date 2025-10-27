@@ -1,6 +1,6 @@
 # 🚀 EKS MSK RDS App - Kubernetes Three-Tier Application
 
-This project demonstrates a complete **three-tier Kubernetes application** deployed on AWS using **EKS**, **MSK (Kafka)**, and **RDS**. It showcases modern cloud-native architecture with event-driven communication and managed AWS services with GitHub Actions.
+This project demonstrates a complete **three-tier Kubernetes application** deployed on AWS using **EKS**, **MSK (Kafka)**, and **RDS**. It showcases a modern, cloud-native architecture with event-driven communication and managed AWS services with GitHub Actions.
 
 **Application Source Code**: [react-springboot-kafka-apps](https://github.com/manvinderjit/react-springboot-kafka-apps)
 
