@@ -24,7 +24,7 @@ variable "cluster_version" {
   default     = "1.33"
 }
 
-variable "admin_user_arn" {
+variable "eks_admin_user_arn" {
   description = "ARN of the IAM user to grant admin access to the cluster"
   type        = string
 }

@@ -82,13 +82,13 @@ resource "aws_eks_cluster" "eks_msk_rds_app_eks_cluster" {
   }
 
   # Disable delete protection
-  deletion_protection = false
+  deletion_protection = false  
 }
 
 # The access entry resource no longer needs the kubernetes_groups argument
 resource "aws_eks_access_entry" "eks_admin_user" {
   cluster_name  = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
-  principal_arn = var.admin_user_arn
+  principal_arn = var.eks_admin_user_arn
   depends_on = [
     aws_eks_cluster.eks_msk_rds_app_eks_cluster
   ]

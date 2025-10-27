@@ -23,7 +23,7 @@ module "eks" {
   private_eks_subnet_ids  = module.vpc.private_eks_subnet_ids
   cluster_name            = "eks-msk-rds-app-cluster"
   cluster_version         = "1.33"
-  admin_user_arn          = var.eks_admin_user_arn
+  eks_admin_user_arn          = var.eks_admin_user_arn
 
   # Node group configuration
   node_group_name         = "eks-t3small-ng"
