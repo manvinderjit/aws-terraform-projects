@@ -41,11 +41,11 @@ resource "aws_lb" "main" {
 
 # Target Group for Frontend
 resource "aws_lb_target_group" "frontend" {
-  name     = "${var.project_name}-frontend-tg"
-  port     = var.frontend_port
-  protocol = "HTTP"
-  vpc_id   = var.vpc_id
-  target_type = "ip"
+  name        = "${var.project_name}-frontend-tg"
+  port        = var.frontend_port
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "instance"
 
   health_check {
     enabled             = true

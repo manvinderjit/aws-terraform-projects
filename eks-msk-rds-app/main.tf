@@ -106,3 +106,14 @@ module "alb" {
 
   depends_on = [module.vpc, module.eks]
 }
+
+# ALB Target Registration Module
+module "alb_targets" {
+  source = "./modules/alb-targets"
+
+  cluster_name      = "eks-msk-rds-app-cluster"
+  target_group_arn  = module.alb.target_group_arn
+  node_port         = 30080
+
+  depends_on = [module.eks, module.alb]
+}
