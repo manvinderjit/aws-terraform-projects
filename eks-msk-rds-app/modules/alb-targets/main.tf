@@ -13,9 +13,9 @@ data "aws_instances" "eks_nodes" {
   depends_on = [var.node_group_ready]
 }
 
-# Register EKS nodes with ALB target group
+# Register EKS nodes with ALB target group using fixed count
 resource "aws_lb_target_group_attachment" "eks_nodes" {
-  count = min(var.node_count, length(data.aws_instances.eks_nodes.ids))
+  count = var.node_count
   
   target_group_arn = var.target_group_arn
   target_id        = data.aws_instances.eks_nodes.ids[count.index]
