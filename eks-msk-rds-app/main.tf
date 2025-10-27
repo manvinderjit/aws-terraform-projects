@@ -79,7 +79,8 @@ module "msk" {
   project_name                  = "eks-msk-rds-app"
   vpc_id                        = module.vpc.vpc_id
   msk_subnet_ids                = module.vpc.private_msk_subnet_ids
-  eks_node_security_group_id    = module.eks.node_security_group_id  
+  eks_node_security_group_id    = module.eks.node_security_group_id
+  eks_cluster_security_group_id = module.eks.cluster_security_group_id
 
   # MSK configuration
   cluster_name             = "eks-msk-rds-app-msk-cluster"
@@ -90,7 +91,7 @@ module "msk" {
   client_broker_encryption = "PLAINTEXT"
   in_cluster_encryption    = false
 
-  depends_on = [module.vpc, module.eks]  
+  depends_on = [module.vpc, module.eks]
 }
 
 # Application Load Balancer Module

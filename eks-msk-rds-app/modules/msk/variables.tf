@@ -18,6 +18,11 @@ variable "eks_node_security_group_id" {
   type        = string
 }
 
+variable "eks_cluster_security_group_id" {
+  description = "Security group ID of the EKS cluster"
+  type        = string
+}
+
 variable "cluster_name" {
   description = "Name of the MSK cluster"
   type        = string

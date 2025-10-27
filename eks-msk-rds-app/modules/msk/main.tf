@@ -10,6 +10,14 @@ resource "aws_security_group" "eks_msk_rds_app_sg_msk" {
     security_groups = [var.eks_node_security_group_id]
     description     = "Allow Kafka traffic from EKS nodes"
   }
+  
+  ingress {
+    from_port       = 9092
+    to_port         = 9092
+    protocol        = "tcp"
+    security_groups = [var.eks_cluster_security_group_id]
+    description     = "Allow Kafka traffic from EKS cluster"
+  }
 
   egress {
     from_port   = 0
