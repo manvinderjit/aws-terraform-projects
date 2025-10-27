@@ -114,6 +114,8 @@ module "alb_targets" {
   cluster_name      = "eks-msk-rds-app-cluster"
   target_group_arn  = module.alb.target_group_arn
   node_port         = 30080
+  node_count        = module.eks.node_desired_size
+  node_group_ready  = module.eks.node_group_arn
 
   depends_on = [module.eks, module.alb]
 }

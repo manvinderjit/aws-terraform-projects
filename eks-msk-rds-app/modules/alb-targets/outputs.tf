@@ -1,6 +1,6 @@
 output "registered_targets" {
   description = "List of registered target IDs"
-  value       = data.aws_instances.eks_nodes.ids
+  value       = aws_lb_target_group_attachment.eks_nodes[*].target_id
 }
 
 output "target_group_arn" {

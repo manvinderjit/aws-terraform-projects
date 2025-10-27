@@ -32,3 +32,8 @@ output "node_group_status" {
   description = "Status of the EKS node group"
   value       = aws_eks_node_group.eks_nodes.status
 }
+
+output "node_desired_size" {
+  description = "Desired size of the EKS node group"
+  value       = aws_eks_node_group.eks_nodes.scaling_config[0].desired_size
+}
