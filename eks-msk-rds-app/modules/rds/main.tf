@@ -1,7 +1,7 @@
 # Security Groups
 resource "aws_security_group" "eks_msk_rds_app_sg_rds" {
   name        = "${var.project_name}-sg-rds"
-  description = "Allow MySQL from EC2"
+  description = "Allow MySQL from EKS cluster and nodes"
   vpc_id      = var.vpc_id
 
   ingress {
@@ -10,6 +10,14 @@ resource "aws_security_group" "eks_msk_rds_app_sg_rds" {
     to_port         = 3306
     protocol        = "tcp"
     security_groups = [var.eks_node_security_group_id]
+  }
+
+  ingress {
+    description     = "MySQL access from EKS Cluster"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [var.eks_cluster_security_group_id]
   }
 
   egress {

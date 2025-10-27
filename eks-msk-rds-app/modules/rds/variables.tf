@@ -18,6 +18,11 @@ variable "eks_node_security_group_id" {
   type        = string
 }
 
+variable "eks_cluster_security_group_id" {
+  description = "Security group ID of the EKS cluster"
+  type        = string
+}
+
 variable "db_identifier" {
   description = "The name of the RDS instance"
   type        = string
