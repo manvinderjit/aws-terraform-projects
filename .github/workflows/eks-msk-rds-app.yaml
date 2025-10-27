@@ -82,23 +82,6 @@ jobs:
 
           echo "Terraform outputs captured"
 
-      - name: Debug AWS and EKS Access
-        id: debug_aws
-        run: |
-          echo "=== AWS Debug Information ==="
-          echo "Current AWS Identity:"
-          aws sts get-caller-identity
-          
-          echo "AWS Region: ${{ env.AWS_REGION }}"
-          echo "Available EKS clusters in region:"
-          aws eks list-clusters --region ${{ env.AWS_REGION }}
-          
-          echo "Checking specific cluster:"
-          aws eks describe-cluster --name eks-msk-rds-app-cluster --region ${{ env.AWS_REGION }} || echo "Cluster not found in this region"
-          
-          echo "Checking access entries:"
-          aws eks list-access-entries --cluster-name eks-msk-rds-app-cluster --region ${{ env.AWS_REGION }} || echo "Cannot list access entries"
-
       - name: Configure kubectl
         id: configure_kubectl
         run: |
