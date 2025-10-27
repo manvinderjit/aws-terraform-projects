@@ -4,6 +4,12 @@ variable "aws_region" {
   default     = "us-east-2"
 }
 
+variable "eks_admin_user_arn" {
+  description = "ARN of the IAM user to grant admin access to the EKS cluster"
+  type        = string
+}
+
+
 variable "db_username" {
   description = "RDS database username"
   type        = string

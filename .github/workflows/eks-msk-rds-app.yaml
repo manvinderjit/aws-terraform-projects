@@ -72,7 +72,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-        run: terraform plan -out=tfplan -no-color -var="db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" -var="db_username=${{ secrets.AWS_THREE_TIER_RDS_DB_USER_NAME }}" -var="db_password=${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}"
+        run: terraform plan -out=tfplan -no-color -var="admin_user_arn=${{ secrets.EKS_ADMIN_USER_ARN }}" -var="db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" -var="db_username=${{ secrets.AWS_THREE_TIER_RDS_DB_USER_NAME }}" -var="db_password=${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}"
 
       - name: Terraform Apply
         id: apply
