@@ -30,3 +30,19 @@ output "db_instance_port" {
   description = "The database port"
   value       = module.rds.db_instance_port
 }
+
+# MSK Outputs
+output "msk_cluster_arn" {
+  description = "Amazon Resource Name (ARN) of the MSK cluster"
+  value       = module.msk.cluster_arn
+}
+
+output "msk_bootstrap_brokers" {
+  description = "Plaintext connection host:port pairs"
+  value       = module.msk.bootstrap_brokers
+}
+
+output "msk_zookeeper_connect_string" {
+  description = "A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster"
+  value       = module.msk.zookeeper_connect_string
+}

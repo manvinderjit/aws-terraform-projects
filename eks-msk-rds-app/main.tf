@@ -70,3 +70,24 @@ module "rds" {
 
   depends_on = [module.vpc, module.eks]
 }
+
+# MSK Module
+module "msk" {
+  source = "./modules/msk"
+
+  project_name               = "eks-msk-rds-app"
+  vpc_id                    = module.vpc.vpc_id
+  msk_subnet_ids            = module.vpc.private_msk_subnet_ids
+  eks_node_security_group_id = module.eks.node_security_group_id
+
+  # MSK configuration
+  cluster_name             = "eks-msk-rds-app-msk-cluster"
+  kafka_version           = "3.8.x"
+  number_of_broker_nodes  = 2
+  broker_instance_type    = "kafka.t3.small"
+  broker_volume_size      = 10
+  client_broker_encryption = "PLAINTEXT"
+  in_cluster_encryption   = false
+
+  depends_on = [module.vpc, module.eks]
+}
