@@ -19,3 +19,14 @@ output "cluster_endpoint" {
   description = "Endpoint for EKS control plane"
   value       = module.eks.cluster_endpoint
 }
+
+# RDS Outputs
+output "db_instance_endpoint" {
+  description = "The RDS instance endpoint"
+  value       = module.rds.db_instance_endpoint
+}
+
+output "db_instance_port" {
+  description = "The database port"
+  value       = module.rds.db_instance_port
+}

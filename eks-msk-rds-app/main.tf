@@ -38,3 +38,35 @@ module "eks" {
 
   depends_on = [module.vpc]
 }
+
+# RDS Module
+module "rds" {
+  source = "./modules/rds"
+
+  project_name                = "eks-msk-rds-app"
+  vpc_id                      = module.vpc.vpc_id
+  rds_subnet_ids              = module.vpc.rds_subnet_ids
+  eks_node_security_group_id  = module.eks.node_security_group_id
+
+  # Database configuration
+  db_identifier           = "terraform-db"
+  allocated_storage       = 20
+  storage_type            = "gp2"
+  engine                  = "mysql"
+  engine_version          = "8.0.42"
+  instance_class          = "db.t4g.micro"
+  db_username             = var.db_username
+  db_password             = var.db_password
+  db_name                 = var.db_name
+  skip_final_snapshot     = true
+  publicly_accessible     = false
+  multi_az                = false
+  backup_retention_period = 0
+
+  tags = {
+    ManagedBy = "GitAwsTerraformProjects"
+    Project   = "eks-msk-rds-app"
+  }
+
+  depends_on = [module.vpc, module.eks]
+}
