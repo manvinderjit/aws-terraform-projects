@@ -4,6 +4,6 @@ metadata:
   name: frontend-config
   namespace: default
 data:
-  SPRING_KAFKA_BOOTSTRAP_SERVERS: "YOUR_KAFKA_BOOTSTRAP_SERVERS"
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "${MSK_BOOTSTRAP_BROKERS}"
   SPRING_APPLICATION_NAME: "frontend"
   BACKEND_API_URL: "http://service-kafka-project-backend:8080/api/events"
