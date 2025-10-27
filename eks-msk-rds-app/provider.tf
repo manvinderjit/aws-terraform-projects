@@ -9,15 +9,6 @@ provider "aws" {
     }
 }
 
-# Data sources for EKS cluster authentication
-data "aws_eks_cluster" "cluster" {
-  name = "eks-msk-rds-app-cluster"
-}
-
-data "aws_eks_cluster_auth" "cluster" {
-  name = "eks-msk-rds-app-cluster"
-}
-
 terraform {
   required_version = ">= 1.0"
   
