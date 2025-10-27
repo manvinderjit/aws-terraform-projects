@@ -46,3 +46,14 @@ output "msk_zookeeper_connect_string" {
   description = "A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster"
   value       = module.msk.zookeeper_connect_string
 }
+
+# Application Load Balancer Outputs
+output "alb_dns_name" {
+  description = "DNS name of the Application Load Balancer"
+  value       = module.alb.alb_dns_name
+}
+
+output "frontend_url" {
+  description = "Frontend application URL"
+  value       = "http://${module.alb.alb_dns_name}"
+}
