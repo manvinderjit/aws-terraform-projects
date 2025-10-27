@@ -59,7 +59,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -out=tfplan -no-color -var="eks_admin_user_arn=${{ secrets.EKS_ADMIN_USER_ARN }}" -var="db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" -var="db_username=${{ secrets.AWS_THREE_TIER_RDS_DB_USER_NAME }}" -var="db_password=${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}"
+        run: terraform plan -out=tfplan -no-color -var="eks_admin_user_arn=${{ secrets.EKS_ADMIN_USER_ARN }}" -var="github_actions_role_arn=${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}" -var="db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" -var="db_username=${{ secrets.AWS_THREE_TIER_RDS_DB_USER_NAME }}" -var="db_password=${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}"
 
       - name: Terraform Apply
         id: apply

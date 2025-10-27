@@ -82,7 +82,7 @@ resource "aws_eks_cluster" "eks_msk_rds_app_eks_cluster" {
   }
 
   # Disable delete protection
-  deletion_protection = false  
+  deletion_protection = false
 }
 
 # The access entry resource no longer needs the kubernetes_groups argument
@@ -98,6 +98,27 @@ resource "aws_eks_access_entry" "eks_admin_user" {
 resource "aws_eks_access_policy_association" "eks_admin_policy_association" {
   cluster_name  = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
   principal_arn = aws_eks_access_entry.eks_admin_user.principal_arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  access_scope {
+    type = "cluster"
+  }
+}
+
+# GitHub Actions role access entry (for CI/CD)
+resource "aws_eks_access_entry" "github_actions_role" {
+  count         = var.github_actions_role_arn != "" ? 1 : 0
+  cluster_name  = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  principal_arn = var.github_actions_role_arn
+  depends_on = [
+    aws_eks_cluster.eks_msk_rds_app_eks_cluster
+  ]
+}
+
+# GitHub Actions role policy association
+resource "aws_eks_access_policy_association" "github_actions_policy_association" {
+  count         = var.github_actions_role_arn != "" ? 1 : 0
+  cluster_name  = aws_eks_cluster.eks_msk_rds_app_eks_cluster.name
+  principal_arn = aws_eks_access_entry.github_actions_role[0].principal_arn
   policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
   access_scope {
     type = "cluster"

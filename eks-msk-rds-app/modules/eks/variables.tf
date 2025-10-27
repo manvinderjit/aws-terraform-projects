@@ -29,6 +29,12 @@ variable "eks_admin_user_arn" {
   type        = string
 }
 
+variable "github_actions_role_arn" {
+  description = "ARN of the GitHub Actions IAM role for CI/CD access"
+  type        = string
+  default     = ""
+}
+
 variable "node_group_name" {
   description = "Name of the EKS node group"
   type        = string
