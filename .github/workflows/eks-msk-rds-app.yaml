@@ -59,6 +59,8 @@ jobs:
           AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
         run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=eks-msk-rds-app/${AWS_TFSTATE_BUCKET_KEY_NAME}" -backend-config="region=${AWS_TFSTATE_REGION}"
 
+
+
       - name: Terraform Validate
         id: validate
         run: terraform validate -no-color
@@ -95,6 +97,8 @@ jobs:
           aws eks update-kubeconfig --region us-east-2 --name eks-msk-rds-app-cluster
           kubectl cluster-info
           echo "kubectl configured"
+
+
 
       - name: Deploy Kubernetes Applications
         id: deploy_k8s
@@ -135,22 +139,24 @@ jobs:
           kubectl rollout status deployment/deployment-kafka-project-frontend --timeout=300s
 
           echo "Waiting for Classic Load Balancer to be provisioned..."
-          kubectl wait --for=condition=ready service/service-kafka-project-frontend-lb --timeout=300s || true
+          # Wait for LoadBalancer to get an external IP/hostname (max 5 minutes)
+          for i in {1..30}; do
+            LB_STATUS=$(kubectl get service service-kafka-project-frontend-lb -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
+            if [[ -n "$LB_STATUS" && "$LB_STATUS" != "null" ]]; then
+              echo "LoadBalancer provisioned with hostname: $LB_STATUS"
+              break
+            fi
+            echo "Waiting for LoadBalancer... (attempt $i/30)"
+            sleep 10
+          done
 
           echo "Kubernetes applications deployed successfully!"
 
           # Show deployment status
           echo ""
-          echo "Applpication Pods:"
-          kubectl get pods -l app=kafka-project-backend -o wide
-          kubectl get pods -l app=kafka-project-frontend -o wide
-
-          echo "Services:"
-          kubectl get svc service-kafka-project-backend service-kafka-project-frontend
-
-          echo ""
-          echo "Classic Load Balancer Service:"
-          kubectl get service service-kafka-project-frontend-lb -o wide
+          echo "Application Status:"
+          kubectl get pods -l app=kafka-project-backend,app=kafka-project-frontend
+          kubectl get services
 
           # Get LoadBalancer URL
           echo ""
@@ -162,7 +168,6 @@ jobs:
             echo "=== Application Access URLs ==="
             echo "Frontend: http://$LB_HOSTNAME"
             echo "Backend API: Access via frontend (internal communication)"
-            echo "Health Check: http://$LB_HOSTNAME"
             echo ""
             echo "Classic Load Balancer Details:"
             echo "   - Type: AWS Classic Load Balancer (ELB)"
@@ -172,8 +177,7 @@ jobs:
           else
             echo ""
             echo "Classic Load Balancer is still provisioning. This may take a few minutes."
-            echo "   Monitor status with: kubectl get service service-kafka-project-frontend-lb -w"
-            echo "   Check events with: kubectl describe service service-kafka-project-frontend-lb"
+            echo "   Monitor status: kubectl get service service-kafka-project-frontend-lb -w"
           fi
 
           echo ""
