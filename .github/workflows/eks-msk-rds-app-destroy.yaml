@@ -16,7 +16,6 @@ permissions:
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   AWS_TFSTATE_REGION: ${{ secrets.AWS_TFSTATE_REGION }}
-  AWS_TFSTATE_LOCK_TABLE_NAME: ${{ secrets.AWS_TFSTATE_LOCK_TABLE_NAME }}
 
 jobs:
   destroy-infrastructure:
@@ -47,12 +46,29 @@ jobs:
         env:
           AWS_TFSTATE_BUCKET_KEY_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
           AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
-        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=eks-msk-rds-app/${AWS_TFSTATE_BUCKET_KEY_NAME}" -backend-config="region=${AWS_TFSTATE_REGION}" -backend-config="dynamodb_table=${AWS_TFSTATE_LOCK_TABLE_NAME}"
+        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=eks-msk-rds-app/${AWS_TFSTATE_BUCKET_KEY_NAME}" -backend-config="region=${AWS_TFSTATE_REGION}"
+
+      - name: Configure kubectl (for cleanup)
+        id: configure_kubectl
+        continue-on-error: true
+        run: |
+          echo "Configuring kubectl for EKS cluster cleanup..."
+          aws eks update-kubeconfig --region us-east-2 --name eks-msk-rds-app-cluster || echo "EKS cluster may not exist"
+
+          # Clean up LoadBalancer services first to avoid orphaned ELBs
+          if kubectl get service service-kafka-project-frontend-lb >/dev/null 2>&1; then
+            echo "Removing LoadBalancer service to prevent orphaned ELB..."
+            kubectl delete service service-kafka-project-frontend-lb --ignore-not-found=true
+            echo "Waiting for ELB cleanup..."
+            sleep 30
+          fi
 
       - name: Terraform Plan Destroy
         id: plan_destroy
         run: |
           terraform plan -destroy -out=destroy.tfplan -no-color \
+            -var="eks_admin_user_arn=${{ secrets.EKS_ADMIN_USER_ARN }}" \
+            -var="github_actions_role_arn=${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}" \
             -var="db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" \
             -var="db_username=${{ secrets.AWS_THREE_TIER_RDS_DB_USER_NAME }}" \
             -var="db_password=${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}"
@@ -66,15 +82,57 @@ jobs:
         id: destroy
         run: |
           echo "DESTROYING ALL INFRASTRUCTURE"
+          echo "This will permanently delete:"
+          echo "  - EKS Cluster and Node Groups"
+          echo "  - MSK Kafka Cluster"
+          echo "  - RDS MySQL Database"
+          echo "  - VPC and all networking"
+          echo "  - IAM roles and policies"
+          echo ""
           terraform apply -auto-approve destroy.tfplan
+
+      - name: Post-Destroy Cleanup
+        id: post_cleanup
+        continue-on-error: true
+        run: |
+          echo "Performing post-destroy cleanup..."
+
+          # Check for any remaining LoadBalancers
+          aws elbv2 describe-load-balancers --query 'LoadBalancers[?contains(LoadBalancerName, `eks-msk-rds-app`) || contains(Tags[?Key==`kubernetes.io/cluster/eks-msk-rds-app-cluster`].Value, `owned`)].LoadBalancerArn' --output text | while read lb_arn; do
+            if [[ -n "$lb_arn" ]]; then
+              echo "Found orphaned ALB: $lb_arn"
+              aws elbv2 delete-load-balancer --load-balancer-arn "$lb_arn" || echo "Failed to delete ALB"
+            fi
+          done
+
+          # Check for Classic Load Balancers
+          aws elb describe-load-balancers --query 'LoadBalancerDescriptions[?contains(LoadBalancerName, `eks-msk-rds-app`)].LoadBalancerName' --output text | while read lb_name; do
+            if [[ -n "$lb_name" ]]; then
+              echo "Found orphaned ELB: $lb_name"
+              aws elb delete-load-balancer --load-balancer-name "$lb_name" || echo "Failed to delete ELB"
+            fi
+          done
+
+          echo "Post-destroy cleanup completed"
 
       - name: Verify Destruction
         id: verify
         run: |
           echo "=== Destruction Complete ==="
-          echo "All EKS MSK RDS App resources have been destroyed"
+          echo "All EKS MSK RDS App resources have been destroyed:"
+          echo "   - EKS Cluster: eks-msk-rds-app-cluster"
+          echo "   - MSK Cluster: eks-msk-rds-app-msk-cluster"
+          echo "   - RDS Instance: terraform-db"
+          echo "   - VPC and networking components"
+          echo "   - IAM roles and policies"
+          echo ""
           echo "AWS charges should stop within the hour"
-          echo "Check AWS Console to verify resource cleanup"
+          echo "Check AWS Console to verify complete resource cleanup"
+          echo ""
+          echo "Manual cleanup may be needed for:"
+          echo "   - Any orphaned ELB/ALB load balancers"
+          echo "   - CloudWatch log groups"
+          echo "   - ECR repositories (if created)"
 
   destroy-failed:
     runs-on: ubuntu-latest
