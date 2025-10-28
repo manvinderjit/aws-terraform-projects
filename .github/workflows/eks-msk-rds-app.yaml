@@ -1,22 +1,19 @@
-name: Deploy a 3-tier app and infrastructure
+name: Deploy a 3-tier EKS MSK RDS Infra and App
 
 on:
   push:
     paths:
-      - 'eks-msk-rds-app/**'
+      - "eks-msk-rds-app/**"
     branches:
-      - project/eks-msk-rds-app 
+      - project/eks-msk-rds-app
 
   workflow_dispatch:
     inputs:
-      action:
-        description: 'Terraform Action'
-        required: true
-        default: 'apply'
-        type: choice
-        options:
-          - apply
-          - destroy
+      skip_app_deployment:
+        description: "Skip application deployment (infrastructure only)"
+        required: false
+        default: false
+        type: boolean
 
 # These permissions are needed to interact with GitHub's OIDC Token endpoint.
 permissions:
@@ -24,17 +21,16 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: ${{ secrets.AWS_REGION }}  
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_TFSTATE_REGION: ${{ secrets.AWS_TFSTATE_REGION }}
 
 jobs:
-  deploy-base-infra-rds:
+  deploy-infrastructure-and-apps:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
         working-directory: eks-msk-rds-app
-    outputs:
-      ami_id_backend: ${{ steps.get_backend_ami_id.outputs.ami_id_backend }}
 
     steps:
       - name: Checkout the repo
@@ -44,8 +40,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION }}     
-      
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -53,33 +49,136 @@ jobs:
 
       - name: Terraform Format
         id: fmt
-        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: terraform fmt -check
         continue-on-error: true
-        
+
       - name: Terraform Init
-        id: init        
+        id: init
         env:
-          AWS_TFSTATE_BUCKET_KEY_NAME : ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
+          AWS_TFSTATE_BUCKET_KEY_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_KEY_NAME }}
           AWS_TFSTATE_BUCKET_NAME: ${{ secrets.AWS_TFSTATE_BUCKET_NAME }}
-        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=eks-msk-rds-app/${AWS_TFSTATE_BUCKET_KEY_NAME}" -backend-config="region=${AWS_TFSTATE_REGION}" -backend-config="dynamodb_table=${AWS_TFSTATE_LOCK_TABLE_NAME}"
-        
+        run: terraform init -backend-config="bucket=${AWS_TFSTATE_BUCKET_NAME}" -backend-config="key=eks-msk-rds-app/${AWS_TFSTATE_BUCKET_KEY_NAME}" -backend-config="region=${AWS_TFSTATE_REGION}"
+
+
+
       - name: Terraform Validate
         id: validate
-        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: terraform validate -no-color
-      
+
       - name: Terraform Plan
         id: plan
-        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
-        run: terraform plan -out=tfplan -no-color -var="db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" -var="db_username=${{ secrets.AWS_THREE_TIER_RDS_DB_USER_NAME }}" -var="db_password=${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}"
+        run: terraform plan -out=tfplan -no-color -var="eks_admin_user_arn=${{ secrets.EKS_ADMIN_USER_ARN }}" -var="github_actions_role_arn=${{ secrets.AWS_TERRAFORM_GITHUB_ROLE }}" -var="db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" -var="db_username=${{ secrets.AWS_THREE_TIER_RDS_DB_USER_NAME }}" -var="db_password=${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}"
 
       - name: Terraform Apply
         id: apply
-        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
         run: terraform apply -auto-approve tfplan
-      
-      - name: Terraform Destroy
-        id: destroy
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy' }}
-        run: terraform destroy -auto-approve -var="db_name=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" -var="db_username=${{ secrets.AWS_THREE_TIER_RDS_DB_USER_NAME }}" -var="db_password=${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}"
+
+      - name: Get Terraform Outputs
+        id: terraform_outputs
+        run: |
+          echo "Getting Terraform outputs..."
+          MSK_BOOTSTRAP_BROKERS=$(terraform output -raw msk_bootstrap_brokers)
+          RDS_ENDPOINT=$(terraform output -raw db_instance_endpoint | cut -d: -f1)
+          RDS_PORT=$(terraform output -raw db_instance_port)
+
+          echo "MSK_BOOTSTRAP_BROKERS=$MSK_BOOTSTRAP_BROKERS" >> $GITHUB_ENV
+          echo "RDS_ENDPOINT=$RDS_ENDPOINT" >> $GITHUB_ENV
+          echo "RDS_PORT=$RDS_PORT" >> $GITHUB_ENV
+          echo "DB_NAME=${{ secrets.AWS_THREE_TIER_RDS_DB_NAME }}" >> $GITHUB_ENV
+          echo "DB_USERNAME=${{ secrets.AWS_THREE_TIER_RDS_DB_USER_NAME }}" >> $GITHUB_ENV
+          echo "DB_PASSWORD=${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}" >> $GITHUB_ENV
+
+          echo "Terraform outputs captured"
+
+      - name: Configure kubectl
+        id: configure_kubectl
+        run: |
+          echo "Configuring kubectl for EKS cluster..."
+          aws eks update-kubeconfig --region us-east-2 --name eks-msk-rds-app-cluster
+          kubectl cluster-info
+          echo "kubectl configured"
+
+
+
+      - name: Deploy Kubernetes Applications
+        id: deploy_k8s
+        if: inputs.skip_app_deployment != true
+        run: |
+          echo "Deploying Kubernetes Applications with Classic Load Balancer..."
+
+          # Create base64 encoded password for secrets
+          DB_PASSWORD_BASE64=$(echo -n "${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}" | base64 -w 0)
+
+          echo "Deploying/Updating ConfigMaps and Secrets..."
+
+          # Deploy backend ConfigMap
+          echo "Deploying backend ConfigMap..."
+          envsubst < k8-manifests/backend/configmap.yaml | kubectl apply -f -
+
+          # Deploy backend Secrets
+          echo "Deploying backend Secrets..."
+          DB_PASSWORD_BASE64=$DB_PASSWORD_BASE64 envsubst < k8-manifests/backend/secrets.yaml | kubectl apply -f -
+
+          # Deploy frontend ConfigMap
+          echo "Deploying frontend ConfigMap..."
+          envsubst < k8-manifests/frontend/configmap.yaml | kubectl apply -f -
+
+          echo "Deploying applications..."
+
+          # Deploy backend services
+          kubectl apply -f k8-manifests/backend/1-deployment-backend.yaml
+          kubectl apply -f k8-manifests/backend/2-svc-cluster-backend.yaml
+
+          # Deploy frontend services
+          kubectl apply -f k8-manifests/frontend/1-deployment-frontend.yaml
+          kubectl apply -f k8-manifests/frontend/2-2-svc-cluster-frontend.yaml
+          kubectl apply -f k8-manifests/frontend/3-svc-loadbalancer-frontend.yaml
+
+          echo "Waiting for deployments to be ready..."
+          kubectl rollout status deployment/deployment-kafka-project-backend --timeout=300s
+          kubectl rollout status deployment/deployment-kafka-project-frontend --timeout=300s
+
+          echo "Waiting for Classic Load Balancer to be provisioned..."
+          # Wait for LoadBalancer to get an external IP/hostname (max 5 minutes)
+          for i in {1..30}; do
+            LB_STATUS=$(kubectl get service service-kafka-project-frontend-lb -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
+            if [[ -n "$LB_STATUS" && "$LB_STATUS" != "null" ]]; then
+              echo "LoadBalancer provisioned with hostname: $LB_STATUS"
+              break
+            fi
+            echo "Waiting for LoadBalancer... (attempt $i/30)"
+            sleep 10
+          done
+
+          echo "Kubernetes applications deployed successfully!"
+
+          # Show deployment status
+          echo ""
+          echo "Application Status:"
+          kubectl get pods -l app=kafka-project-backend,app=kafka-project-frontend
+          kubectl get services
+
+          # Get LoadBalancer URL
+          echo ""
+          echo "Retrieving Classic Load Balancer URL..."
+          LB_HOSTNAME=$(kubectl get service service-kafka-project-frontend-lb -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
+
+          if [[ -n "$LB_HOSTNAME" && "$LB_HOSTNAME" != "null" ]]; then
+            echo ""
+            echo "=== Application Access URLs ==="
+            echo "Frontend: http://$LB_HOSTNAME"
+            echo "Backend API: Access via frontend (internal communication)"
+            echo ""
+            echo "Classic Load Balancer Details:"
+            echo "   - Type: AWS Classic Load Balancer (ELB)"
+            echo "   - Cross-zone load balancing: Enabled"
+            echo "   - Health check interval: 30s"
+            echo "   - Connection idle timeout: 60s"
+          else
+            echo ""
+            echo "Classic Load Balancer is still provisioning. This may take a few minutes."
+            echo "   Monitor status: kubectl get service service-kafka-project-frontend-lb -w"
+          fi
+
+          echo ""
+          echo "Deployment workflow completed!"
