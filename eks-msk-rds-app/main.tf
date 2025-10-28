@@ -95,28 +95,5 @@ module "msk" {
   depends_on = [module.vpc, module.eks]
 }
 
-# Application Load Balancer Module
-module "alb" {
-  source = "./modules/alb"
-
-  project_name          = "eks-msk-rds-app"
-  vpc_id                = module.vpc.vpc_id
-  public_subnet_ids     = module.vpc.public_subnet_ids
-  frontend_port         = 30080
-  eks_security_group_id = module.eks.node_security_group_id
-
-  depends_on = [module.vpc, module.eks]
-}
-
-# ALB Target Registration Module
-module "alb_targets" {
-  source = "./modules/alb-targets"
-
-  cluster_name      = "eks-msk-rds-app-cluster"
-  target_group_arn  = module.alb.target_group_arn
-  node_port         = 30080
-  node_count        = 2  # Use fixed count instead of dynamic
-  node_group_ready  = module.eks.node_group_arn
-
-  depends_on = [module.eks, module.alb]
-}
+# Using Classic LoadBalancer service instead of AWS Load Balancer Controller
+# This provides simpler, more reliable load balancing without additional complexity

@@ -47,13 +47,19 @@ output "msk_zookeeper_connect_string" {
   value       = module.msk.zookeeper_connect_string
 }
 
-# Application Load Balancer Outputs
-output "alb_dns_name" {
-  description = "DNS name of the Application Load Balancer"
-  value       = module.alb.alb_dns_name
+# Load Balancer Access
+output "load_balancer_instructions" {
+  description = "Instructions to get the LoadBalancer URL"
+  value       = "Run: kubectl get service service-kafka-project-frontend-lb -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'"
 }
 
-output "frontend_url" {
-  description = "Frontend application URL"
-  value       = "http://${module.alb.alb_dns_name}"
+output "public_subnet_ids" {
+  description = "List of public subnet IDs for ALB configuration"
+  value       = module.vpc.public_subnet_ids
+}
+
+# Instructions for getting ALB DNS name
+output "ingress_instructions" {
+  description = "Instructions to get the ALB DNS name"
+  value       = "Run: kubectl get ingress kafka-project-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'"
 }

@@ -8,6 +8,12 @@ on:
       - project/eks-msk-rds-app
 
   workflow_dispatch:
+    inputs:
+      skip_app_deployment:
+        description: "Skip application deployment (infrastructure only)"
+        required: false
+        default: false
+        type: boolean
 
 # These permissions are needed to interact with GitHub's OIDC Token endpoint.
 permissions:
@@ -88,17 +94,18 @@ jobs:
           echo "Configuring kubectl for EKS cluster..."
           aws eks update-kubeconfig --region us-east-2 --name eks-msk-rds-app-cluster
           kubectl cluster-info
-          echo "✅ kubectl configured"
+          echo "kubectl configured"
 
       - name: Deploy Kubernetes Applications
         id: deploy_k8s
+        if: inputs.skip_app_deployment != true
         run: |
-          echo "Deploying Kubernetes Applications..."
+          echo "Deploying Kubernetes Applications with Classic Load Balancer..."
 
           # Create base64 encoded password for secrets
           DB_PASSWORD_BASE64=$(echo -n "${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}" | base64 -w 0)
 
-          echo "Deploying ConfigMaps and Secrets..."
+          echo "Deploying/Updating ConfigMaps and Secrets..."
 
           # Deploy backend ConfigMap
           echo "Deploying backend ConfigMap..."
@@ -112,30 +119,62 @@ jobs:
           echo "Deploying frontend ConfigMap..."
           envsubst < k8-manifests/frontend/configmap.yaml | kubectl apply -f -
 
-          echo "Deploying Applications..."
+          echo "Deploying applications..."
 
-          # Deploy backend application
-          echo "Deploying backend application..."
+          # Deploy backend services
           kubectl apply -f k8-manifests/backend/1-deployment-backend.yaml
           kubectl apply -f k8-manifests/backend/2-svc-cluster-backend.yaml
 
-          # Deploy frontend application
-          echo "Deploying frontend application..."
+          # Deploy frontend services
           kubectl apply -f k8-manifests/frontend/1-deployment-frontend.yaml
           kubectl apply -f k8-manifests/frontend/2-2-svc-cluster-frontend.yaml
+          kubectl apply -f k8-manifests/frontend/3-svc-loadbalancer-frontend.yaml
 
           echo "Waiting for deployments to be ready..."
-
-          # Wait for deployments to be ready
           kubectl rollout status deployment/deployment-kafka-project-backend --timeout=300s
           kubectl rollout status deployment/deployment-kafka-project-frontend --timeout=300s
+
+          echo "Waiting for Classic Load Balancer to be provisioned..."
+          kubectl wait --for=condition=ready service/service-kafka-project-frontend-lb --timeout=300s || true
 
           echo "Kubernetes applications deployed successfully!"
 
           # Show deployment status
-          echo "Deployment Status:"
-          kubectl get pods -l app=kafka-project-backend
-          kubectl get pods -l app=kafka-project-frontend
-          kubectl get services
+          echo ""
+          echo "Applpication Pods:"
+          kubectl get pods -l app=kafka-project-backend -o wide
+          kubectl get pods -l app=kafka-project-frontend -o wide
 
-          echo "Deployment completed!"
+          echo "Services:"
+          kubectl get svc service-kafka-project-backend service-kafka-project-frontend
+
+          echo ""
+          echo "Classic Load Balancer Service:"
+          kubectl get service service-kafka-project-frontend-lb -o wide
+
+          # Get LoadBalancer URL
+          echo ""
+          echo "Retrieving Classic Load Balancer URL..."
+          LB_HOSTNAME=$(kubectl get service service-kafka-project-frontend-lb -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
+
+          if [[ -n "$LB_HOSTNAME" && "$LB_HOSTNAME" != "null" ]]; then
+            echo ""
+            echo "=== Application Access URLs ==="
+            echo "Frontend: http://$LB_HOSTNAME"
+            echo "Backend API: Access via frontend (internal communication)"
+            echo "Health Check: http://$LB_HOSTNAME"
+            echo ""
+            echo "Classic Load Balancer Details:"
+            echo "   - Type: AWS Classic Load Balancer (ELB)"
+            echo "   - Cross-zone load balancing: Enabled"
+            echo "   - Health check interval: 30s"
+            echo "   - Connection idle timeout: 60s"
+          else
+            echo ""
+            echo "Classic Load Balancer is still provisioning. This may take a few minutes."
+            echo "   Monitor status with: kubectl get service service-kafka-project-frontend-lb -w"
+            echo "   Check events with: kubectl describe service service-kafka-project-frontend-lb"
+          fi
+
+          echo ""
+          echo "Deployment workflow completed!"

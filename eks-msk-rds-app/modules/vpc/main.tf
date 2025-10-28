@@ -56,7 +56,7 @@ resource "aws_subnet" "eks_msk_rds_app_subnet_public_1" {
   map_public_ip_on_launch = true
   tags = {
     Name                                        = "${var.project_name}-subnet-public-1"
-    "kubrnetes.io/role/elb"                    = "1"
+    "kubernetes.io/role/elb"                   = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
 }
@@ -68,7 +68,7 @@ resource "aws_subnet" "eks_msk_rds_app_subnet_public_2" {
   map_public_ip_on_launch = true
   tags = {
     Name                                        = "${var.project_name}-subnet-public-2"
-    "kubrnetes.io/role/elb"                    = "1"
+    "kubernetes.io/role/elb"                   = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
 }
@@ -80,7 +80,7 @@ resource "aws_subnet" "eks_msk_rds_app_subnet_private_eks_1" {
   map_public_ip_on_launch = false
   tags = {
     Name                                        = "${var.project_name}-subnet-private-eks-1"
-    "kubrnetes.io/role/elb"                    = "1"
+    "kubernetes.io/role/internal-elb"          = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
 }
@@ -92,7 +92,7 @@ resource "aws_subnet" "eks_msk_rds_app_subnet_private_eks_2" {
   map_public_ip_on_launch = false
   tags = {
     Name                                        = "${var.project_name}-subnet-private-eks-2"
-    "kubrnetes.io/role/elb"                    = "1"
+    "kubernetes.io/role/internal-elb"          = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
 }
