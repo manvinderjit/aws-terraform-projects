@@ -1,4 +1,4 @@
-name: Deploy a 3-tier EKS MSK RDS Infra and App
+name: Deploy 3-tier EKS MSK RDS Infra and App
 
 on:
   push:

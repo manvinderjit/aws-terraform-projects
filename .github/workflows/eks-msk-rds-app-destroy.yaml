@@ -1,4 +1,4 @@
-name: Destroy EKS MSK RDS App Infrastructure
+name: DESTROY 3-tier EKS MSK RDS Infra and App
 
 on:
   workflow_dispatch:
