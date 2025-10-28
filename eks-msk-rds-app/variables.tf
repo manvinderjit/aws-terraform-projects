@@ -15,7 +15,6 @@ variable "github_actions_role_arn" {
   default     = ""
 }
 
-
 variable "db_username" {
   description = "RDS database username"
   type        = string

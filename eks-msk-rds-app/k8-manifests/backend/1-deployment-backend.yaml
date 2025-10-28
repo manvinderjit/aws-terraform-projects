@@ -23,7 +23,7 @@ spec:
               app: kafka-project-backend
       containers:
         - name: kafka-project-backend
-          image: manvinderjit/kafka-project-backend:v2
+          image: manvinderjit/kafka-project-backend:v3
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

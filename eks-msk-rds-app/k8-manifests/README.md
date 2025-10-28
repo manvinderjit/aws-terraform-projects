@@ -1,6 +1,6 @@
 # Kubernetes Manifests
 
-This directory contains Kubernetes manifests for deploying the three-tier application (frontend + backend) to the EKS cluster.
+This directory contains Kubernetes manifests for deploying the three-tier application (frontend + backend) to the EKS cluster with Classic Load Balancer for external access.
 
 ## Environment Variable Substitution
 
@@ -26,11 +26,12 @@ The manifests use environment variable substitution to inject values from Terraf
 
 The manifests are automatically deployed by the GitHub Actions workflow after Terraform infrastructure provisioning:
 
-1. **Infrastructure Deployment**: Terraform creates EKS, RDS, MSK, and ALB
+1. **Infrastructure Deployment**: Terraform creates EKS, RDS, MSK, and VPC
 2. **Get Outputs**: Workflow extracts Terraform outputs (endpoints, ports, etc.)
 3. **Environment Substitution**: `envsubst` replaces variables in manifests
 4. **Kubernetes Deployment**: `kubectl apply` deploys the processed manifests
-5. **Health Checks**: Workflow waits for deployments to be ready
+5. **LoadBalancer Provisioning**: Classic Load Balancer is automatically created
+6. **Health Checks**: Workflow waits for deployments and LoadBalancer to be ready
 
 ## Workflows
 
@@ -61,8 +62,27 @@ kubectl apply -f backend/1-deployment-backend.yaml
 kubectl apply -f backend/2-svc-cluster-backend.yaml
 kubectl apply -f frontend/1-deployment-frontend.yaml
 kubectl apply -f frontend/2-2-svc-cluster-frontend.yaml
+kubectl apply -f frontend/3-svc-loadbalancer-frontend.yaml
 ```
 
 ## Application Access
 
-After deployment, the application is accessible via the ALB DNS name (available in Terraform outputs).
+After deployment, the application is accessible via the Classic Load Balancer hostname:
+
+```bash
+# Get LoadBalancer URL
+kubectl get service service-kafka-project-frontend-lb
+
+# Access application
+curl http://<ELB-HOSTNAME>
+```
+
+## Load Balancer Configuration
+
+The Classic Load Balancer service (`frontend/3-svc-loadbalancer-frontend.yaml`) includes:
+
+- **Type**: Classic Load Balancer (ELB)
+- **Cross-zone load balancing**: Enabled
+- **Health checks**: HTTP on port 8081, path "/"
+- **Connection timeout**: 60 seconds
+- **Health check interval**: 30 seconds

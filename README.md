@@ -9,7 +9,7 @@ This repository contains multiple folders, each of which is a standalone deploym
 | Folder                                                                    | Description                                                                                                                                                                                  |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [1. Three Tier Infrastructure React Springboot RDS App](3-tier-infra-app) | Complete AWS three-tier infrastructure using Terraform, Packer, and GitHub Actions — deploying a **React frontend**, **Spring Boot backend**, and **MySQL database** via CI/CD.              |
-| [2. Three Tier EKS MSK RDS App](eks-msk-rds-app)                          | Kubernetes-based three-tier application on AWS using **EKS**, **MSK (Kafka)**, and **RDS** — showcasing event-driven architecture with real-time data streaming and container orchestration. |
+| [2. Cloud-Native EKS MSK RDS App](eks-msk-rds-app)                        | Production-ready three-tier application on AWS using **EKS**, **MSK (Kafka)**, and **RDS** — featuring modular Terraform architecture, dual CI/CD workflows, event-driven microservices, and comprehensive operational excellence. |
 | [3. AMI Creation EC2 AMI EC2](ec2-ami-ec2)                                | AWS AMI creation and deployment demonstration using **Terraform** — showcasing custom **AMI creation** from EC2 instances and **infrastructure replication** workflows.                      |
 | [4. VPC Networking Fundamentals Subnet EC2 RDS](subnet-ec2-rds)           | AWS VPC networking fundamentals with **EC2** and **RDS (PostgreSQL)** — demonstrating **subnet design**, **security groups**, and **database connectivity** patterns.                        |
 | [5. S3 Static Website with CloudFront](s3-website)                        | Simple, cost-effective static website hosting using **S3** and **CloudFront** — featuring automatic content deployment, secure access controls, and CI/CD workflows.                         |
@@ -40,30 +40,45 @@ It provisions a **React-based frontend**, a **Java Spring Boot backend**, and a 
 
 ## [2. EKS MSK RDS App](eks-msk-rds-app/README.md)
 
-### **Kubernetes Three-Tier Application (EKS + MSK + RDS)**
+### **Cloud-Native Three-Tier Architecture (EKS + MSK + RDS + GitHub Actions)**
 
 #### **Summary:**
 
-This project demonstrates a complete **event-driven three-tier application** deployed on AWS using **Amazon EKS**, **MSK (Managed Kafka)**, and **RDS**.
+This project demonstrates a **production-ready, event-driven three-tier application** deployed on AWS using **Amazon EKS**, **Amazon MSK (Managed Kafka)**, and **Amazon RDS**. 
 
-It showcases modern cloud-native architecture with **real-time event streaming**, **container orchestration**, and **managed AWS services**.
+It showcases modern cloud-native architecture patterns with **real-time event streaming**, **modular Terraform infrastructure**, **automated CI/CD pipelines**, and **comprehensive operational excellence**.
 
 ![Infrastructure Architecture Diagram](./eks-msk-rds-app/images/1-3-tier-eks-msk-rds-app-infra.png)
 
 ![Integration Diagram](./eks-msk-rds-app/images/3-tier-eks-msk-rds-app-traffic-flow.png)
 
-**Application Source**: [react-springboot-kafka-apps](https://github.com/manvinderjit/react-springboot-kafka-apps)
+
+
+### **Application Code:**
+
+The application frontend and backend are created in ThymeLeaf and Springboot.
+
+**Application Source**: [Thymeleaf Springboot Kafka App](https://github.com/manvinderjit/react-springboot-kafka-apps)
+
+### **Project Summary:**
 
 **Description:**
 
-- **EKS Cluster**: Managed Kubernetes with worker nodes in private subnets, complete with essential addons (VPC CNI, CoreDNS, Metrics Server)
-- **Event Streaming**: MSK (Kafka) cluster for real-time message processing between React frontend and Spring Boot backend
-- **Database**: MySQL RDS in isolated database subnets for persistent data storage
-- **Application**: ThymeLeaf Java UI with Spring Boot API, featuring real-time analytics dashboard and live event processing
-- **Infrastructure as Code**: Complete Terraform automation with GitHub Actions CI/CD pipeline
-- **Container-Native**: Kubernetes manifests with ConfigMaps, Secrets, and health checks for production-ready deployment
+- **Modular Terraform Architecture**: Four specialized modules (VPC, EKS, MSK, RDS) with proper dependency management and resource tagging
+- **EKS Cluster**: Kubernetes 1.33 with 2-node cluster, AL2023 AMI, essential addons (VPC CNI, CoreDNS, Kube Proxy), and IAM access entries
+- **Multi-Tier Networking**: 8 subnets across 2 AZs (public, private EKS, private MSK, database) with NAT gateway and security group isolation
+- **Event Streaming**: MSK Kafka 3.8.x cluster (2 brokers) for real-time message processing between ThymeLeaf frontend and Spring Boot backend
+- **Database**: MySQL 8.0.42 RDS (db.t4g.micro) in isolated database subnets with no public access
+- **Application**: Containerized Java ThymeLeaf frontend and Spring Boot backend with health checks, resource limits, and high availability (2 replicas each)
+- **Load Balancing**: Classic ELB with cross-zone load balancing, health checks, and external access
+- **CI/CD Pipelines**: Dual GitHub Actions workflows - automated deployment on push and manual destruction with safety confirmations
+- **Security**: OIDC authentication, least privilege IAM, network isolation, encrypted secrets, and comprehensive access controls
 
-**Key Features**: Real-time event streaming, Kubernetes-native scaling, managed AWS services integration, and comprehensive monitoring capabilities.
+**Key Features**: 
+- **Infrastructure Excellence**: Modular Terraform, multi-AZ deployment, cost-optimized instances, security-first design
+- **Operational Excellence**: GitOps workflows, configuration management, state management, resource monitoring
+- **Application Architecture**: Event-driven microservices, container orchestration, health monitoring, topology awareness
+- **Security & Compliance**: Network security, identity management, secrets management, encryption, access control
 
 ---
 
