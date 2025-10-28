@@ -1,4 +1,4 @@
-name: Deploy a 3-tier EKS MSK RDS Infra and App
+name: Deploy 3-tier EKS MSK RDS Infra and App
 
 on:
   push:
@@ -127,7 +127,7 @@ jobs:
 
           # Deploy frontend services
           kubectl apply -f k8-manifests/frontend/1-deployment-frontend.yaml
-          kubectl apply -f k8-manifests/frontend/2-2-svc-cluster-frontend.yaml
+          kubectl apply -f k8-manifests/frontend/2-svc-cluster-frontend.yaml
           kubectl apply -f k8-manifests/frontend/3-svc-loadbalancer-frontend.yaml
 
           echo "Waiting for deployments to be ready..."
