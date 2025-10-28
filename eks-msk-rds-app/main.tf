@@ -94,6 +94,3 @@ module "msk" {
 
   depends_on = [module.vpc, module.eks]
 }
-
-# Using Classic LoadBalancer service instead of AWS Load Balancer Controller
-# This provides simpler, more reliable load balancing without additional complexity

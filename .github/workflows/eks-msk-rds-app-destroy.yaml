@@ -73,22 +73,10 @@ jobs:
             -var="db_username=${{ secrets.AWS_THREE_TIER_RDS_DB_USER_NAME }}" \
             -var="db_password=${{ secrets.AWS_THREE_TIER_RDS_DB_PASSWORD }}"
 
-      - name: Show Destroy Plan
-        run: |
-          echo "=== Resources to be DESTROYED ==="
-          terraform show -no-color destroy.tfplan
-
       - name: Terraform Destroy
         id: destroy
         run: |
-          echo "DESTROYING ALL INFRASTRUCTURE"
-          echo "This will permanently delete:"
-          echo "  - EKS Cluster and Node Groups"
-          echo "  - MSK Kafka Cluster"
-          echo "  - RDS MySQL Database"
-          echo "  - VPC and all networking"
-          echo "  - IAM roles and policies"
-          echo ""
+          echo "DESTROYING ALL INFRASTRUCTURE"          
           terraform apply -auto-approve destroy.tfplan
 
       - name: Post-Destroy Cleanup
@@ -119,20 +107,7 @@ jobs:
         id: verify
         run: |
           echo "=== Destruction Complete ==="
-          echo "All EKS MSK RDS App resources have been destroyed:"
-          echo "   - EKS Cluster: eks-msk-rds-app-cluster"
-          echo "   - MSK Cluster: eks-msk-rds-app-msk-cluster"
-          echo "   - RDS Instance: terraform-db"
-          echo "   - VPC and networking components"
-          echo "   - IAM roles and policies"
-          echo ""
-          echo "AWS charges should stop within the hour"
-          echo "Check AWS Console to verify complete resource cleanup"
-          echo ""
-          echo "Manual cleanup may be needed for:"
-          echo "   - Any orphaned ELB/ALB load balancers"
-          echo "   - CloudWatch log groups"
-          echo "   - ECR repositories (if created)"
+          echo "All EKS MSK RDS App resources have been destroyed:"          
 
   destroy-failed:
     runs-on: ubuntu-latest
