@@ -13,6 +13,10 @@ spec:
     metadata:
       labels:
         app: kafka-project-frontend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8081"
+        prometheus.io/path: "/actuator/prometheus"
     spec:
       topologySpreadConstraints:
         - maxSkew: 1
@@ -23,7 +27,7 @@ spec:
               app: kafka-project-frontend
       containers:
         - name: kafka-project-frontend
-          image: manvinderjit/kafka-project-frontend:v3
+          image: manvinderjit/kafka-project-frontend:v4
           imagePullPolicy: Always
           ports:
             - containerPort: 8081
