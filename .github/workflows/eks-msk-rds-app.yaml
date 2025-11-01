@@ -236,7 +236,7 @@ jobs:
           # Get Grafana LoadBalancer URL
           GRAFANA_LB=$(kubectl get service grafana-service -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
           if [[ -n "$GRAFANA_LB" && "$GRAFANA_LB" != "null" ]]; then
-            echo "Grafana Dashboard: http://$GRAFANA_LB:3000"
+            echo "📈 Grafana Dashboard: http://$GRAFANA_LB"
             echo "   Username: admin"
             echo "   Password: admin123"
           else

@@ -39,9 +39,7 @@ spec:
         - mountPath: /grafana-dashboard-definitions/0
           name: grafana-dashboard-app-overview
           readOnly: false
-        - mountPath: /grafana-dashboard-definitions/1
-          name: grafana-dashboard-spring-boot
-          readOnly: false
+
         env:
         - name: GF_SECURITY_ADMIN_USER
           value: admin
@@ -78,10 +76,7 @@ spec:
         configMap:
           defaultMode: 420
           name: grafana-dashboard-app-overview
-      - name: grafana-dashboard-spring-boot
-        configMap:
-          defaultMode: 420
-          name: grafana-dashboard-spring-boot
+
 ---
 apiVersion: v1
 kind: Service
@@ -95,5 +90,5 @@ spec:
     app: grafana
   type: LoadBalancer
   ports:
-    - port: 3000
+    - port: 80
       targetPort: 3000
