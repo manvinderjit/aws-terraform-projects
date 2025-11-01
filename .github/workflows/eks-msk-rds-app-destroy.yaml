@@ -55,12 +55,26 @@ jobs:
           echo "Configuring kubectl for EKS cluster cleanup..."
           aws eks update-kubeconfig --region us-east-2 --name eks-msk-rds-app-cluster || echo "EKS cluster may not exist"
 
-          # Clean up LoadBalancer services first to avoid orphaned ELBs
-          if kubectl get service service-kafka-project-frontend-lb >/dev/null 2>&1; then
-            echo "Removing LoadBalancer service to prevent orphaned ELB..."
-            kubectl delete service service-kafka-project-frontend-lb --ignore-not-found=true
-            echo "Waiting for ELB cleanup..."
+          # Clean up monitoring LoadBalancer services first
+          if kubectl get service grafana-service -n monitoring >/dev/null 2>&1; then
+            echo "Removing Grafana LoadBalancer service..."
+            kubectl delete service grafana-service -n monitoring --ignore-not-found=true
+            echo "Waiting for Grafana ELB cleanup..."
             sleep 30
+          fi
+
+          # Clean up application LoadBalancer services
+          if kubectl get service service-kafka-project-frontend-lb >/dev/null 2>&1; then
+            echo "Removing application LoadBalancer service..."
+            kubectl delete service service-kafka-project-frontend-lb --ignore-not-found=true
+            echo "Waiting for application ELB cleanup..."
+            sleep 30
+          fi
+
+          # Clean up entire monitoring namespace
+          if kubectl get namespace monitoring >/dev/null 2>&1; then
+            echo "Removing monitoring namespace..."
+            kubectl delete namespace monitoring --ignore-not-found=true --timeout=60s
           fi
 
       - name: Terraform Plan Destroy

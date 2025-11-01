@@ -1,0 +1,16 @@
+# Optional: Prometheus LoadBalancer Service
+# WARNING: This adds ~$18/month cost and exposes Prometheus without authentication
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-loadbalancer
+  namespace: monitoring
+  labels:
+    app: prometheus
+spec:
+  selector:
+    app: prometheus
+  type: LoadBalancer
+  ports:
+    - port: 9090
+      targetPort: 9090

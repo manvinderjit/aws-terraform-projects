@@ -171,4 +171,81 @@ jobs:
           fi
 
           echo ""
-          echo "Deployment workflow completed!"
+          echo "Application deployment completed!"
+
+      - name: Deploy Monitoring Stack
+        id: deploy_monitoring
+        if: inputs.skip_app_deployment != true
+        run: |
+          echo "Deploying Prometheus & Grafana Monitoring Stack..."
+
+          # Deploy monitoring namespace
+          echo "Creating monitoring namespace..."
+          kubectl apply -f k8-manifests/monitoring/namespace.yaml
+
+          # Deploy Prometheus RBAC
+          echo "Setting up Prometheus RBAC..."
+          kubectl apply -f k8-manifests/monitoring/prometheus-rbac.yaml
+
+          # Deploy Prometheus configuration
+          echo "Deploying Prometheus configuration..."
+          kubectl apply -f k8-manifests/monitoring/prometheus-config.yaml
+
+          # Deploy Prometheus
+          echo "Deploying Prometheus..."
+          kubectl apply -f k8-manifests/monitoring/prometheus-deployment.yaml
+
+          # Deploy Grafana configuration
+          echo "Deploying Grafana configuration..."
+          kubectl apply -f k8-manifests/monitoring/grafana-config.yaml
+
+          # Deploy Grafana
+          echo "Deploying Grafana..."
+          kubectl apply -f k8-manifests/monitoring/grafana-deployment.yaml
+
+          # Wait for deployments to be ready
+          echo "Waiting for Prometheus to be ready..."
+          kubectl wait --for=condition=available deployment/prometheus -n monitoring --timeout=300s
+
+          echo "Waiting for Grafana to be ready..."
+          kubectl wait --for=condition=available deployment/grafana -n monitoring --timeout=300s
+
+          # Wait for Grafana LoadBalancer
+          echo "Waiting for Grafana LoadBalancer to be provisioned..."
+          for i in {1..30}; do
+            GRAFANA_LB=$(kubectl get service grafana-service -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
+            if [[ -n "$GRAFANA_LB" && "$GRAFANA_LB" != "null" ]]; then
+              echo "Grafana LoadBalancer provisioned with hostname: $GRAFANA_LB"
+              break
+            fi
+            echo "Waiting for Grafana LoadBalancer... (attempt $i/30)"
+            sleep 10
+          done
+
+          echo "Monitoring stack deployed successfully!"
+
+          # Show monitoring status
+          echo ""
+          echo "Monitoring Stack Status:"
+          kubectl get pods -n monitoring
+          kubectl get services -n monitoring
+
+          echo ""
+          echo "=== Monitoring Access URLs ==="
+          
+          # Get Grafana LoadBalancer URL
+          GRAFANA_LB=$(kubectl get service grafana-service -n monitoring -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
+          if [[ -n "$GRAFANA_LB" && "$GRAFANA_LB" != "null" ]]; then
+            echo "Grafana Dashboard: http://$GRAFANA_LB:3000"
+            echo "   Username: admin"
+            echo "   Password: admin123"
+          else
+            echo "Grafana LoadBalancer: Still provisioning"
+            echo "Check status: kubectl get service grafana-service -n monitoring"
+          fi
+          
+          echo "Prometheus (Internal): http://prometheus-service.monitoring.svc.cluster.local:9090"
+          echo "Port Forward: kubectl port-forward -n monitoring svc/prometheus-service 9090:9090"
+
+          echo ""
+          echo "Complete deployment workflow finished!"
