@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${ad.title} + ' - Ad Detail'">Ad Detail</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .ad-detail-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .ad-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+        }
+
+        .ad-content {
+            padding: 2rem;
+        }
+
+        .ad-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .ad-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .ad-company {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .ad-category {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .ad-description {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+
+        .ad-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #229954;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+            transform: translateY(-2px);
+        }
+
+        .navigation {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .navigation a {
+            display: inline-block;
+            margin: 0 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: transform 0.3s ease;
+        }
+
+        .navigation a:hover {
+            transform: translateY(-2px);
+        }
+
+        .event-notice {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            text-align: center;
+            border-left: 4px solid #17a2b8;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .ad-title {
+                font-size: 1.5rem;
+            }
+            
+            .ad-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .ad-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📱 Ad Detail View</h1>
+    </div>
+
+    <div class="container">
+        <div class="event-notice">
+            <strong>📊 Event Tracked!</strong> An "ad_viewed" event was automatically sent when you accessed this page.
+        </div>
+
+        <div class="ad-detail-card">
+            <img th:src="${ad.imageUrl}" th:alt="${ad.title}" class="ad-image">
+            
+            <div class="ad-content">
+                <h1 class="ad-title" th:text="${ad.title}">Ad Title</h1>
+                
+                <div class="ad-meta">
+                    <div class="ad-company" th:text="'by ' + ${ad.company}">Company</div>
+                    <span class="ad-category" th:text="${ad.category}">Category</span>
+                </div>
+                
+                <p class="ad-description" th:text="${ad.description}">Ad Description</p>
+            </div>
+            
+            <div class="ad-actions">
+                <form style="display: inline;" th:action="@{/ad-event}" method="post">
+                    <input type="hidden" name="eventType" value="ad_clicked">
+                    <input type="hidden" name="adId" th:value="${ad.id}">
+                    <input type="hidden" name="adTitle" th:value="${ad.title}">
+                    <button type="submit" class="btn btn-success">Click Ad</button>
+                </form>
+                
+                <a th:href="${ad.targetUrl}" target="_blank" class="btn btn-primary">Visit Website</a>
+                
+                <form style="display: inline;" th:action="@{/ad-event}" method="post">
+                    <input type="hidden" name="eventType" value="ad_closed">
+                    <input type="hidden" name="adId" th:value="${ad.id}">
+                    <input type="hidden" name="adTitle" th:value="${ad.title}">
+                    <button type="submit" class="btn btn-danger">Close Ad</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <a href="/">🏠 Back to Ads</a>
+            <a href="/chart">📈 View Analytics</a>
+            <a href="/data">📋 View Data</a>
+        </div>
+    </div>
+</body>
+</html>
