@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Ad Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .navigation {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .navigation a {
+            display: inline-block;
+            margin: 0 1rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .navigation a:hover {
+            transform: translateY(-2px);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .chart-canvas {
+            max-height: 400px;
+        }
+
+        .analytics-table {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+
+        .analytics-table h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .metric-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 0.1rem;
+        }
+
+        .metric-viewed {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .metric-clicked {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .metric-closed {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Ad Analytics Dashboard</h1>
+        <p>Real-time insights into advertisement performance and user engagement</p>
+    </div>
+
+    <div class="container">
+        <div class="navigation">
+            <a href="/">🏠 Back to Ads</a>
+            <a href="/data">📋 Raw Data</a>
+        </div>
+
+        <div class="charts-grid">
+            <!-- Event Types Chart -->
+            <div class="chart-container">
+                <h3 class="chart-title">📈 Event Types Distribution</h3>
+                <canvas id="eventTypesChart" class="chart-canvas"></canvas>
+            </div>
+
+            <!-- Top Performing Ads Chart -->
+            <div class="chart-container">
+                <h3 class="chart-title">🏆 Top Performing Ads</h3>
+                <canvas id="topAdsChart" class="chart-canvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Detailed Analytics Table -->
+        <div class="analytics-table">
+            <h3>🎯 Detailed Ad Performance Analytics</h3>
+            <div th:if="${adAnalytics != null and !adAnalytics.isEmpty()}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ad Title</th>
+                            <th>Total Interactions</th>
+                            <th>Views</th>
+                            <th>Clicks</th>
+                            <th>Closes</th>
+                            <th>Click Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="entry : ${adAnalytics}">
+                            <td th:text="${entry.key}" style="font-weight: 500;">Ad Title</td>
+                            <td th:text="${(entry.value.get('ad_viewed') != null ? entry.value.get('ad_viewed') : 0) + (entry.value.get('ad_clicked') != null ? entry.value.get('ad_clicked') : 0) + (entry.value.get('ad_closed') != null ? entry.value.get('ad_closed') : 0)}">Total</td>
+                            <td>
+                                <span class="metric-badge metric-viewed" 
+                                      th:text="${entry.value.get('ad_viewed') != null ? entry.value.get('ad_viewed') : 0}">0</span>
+                            </td>
+                            <td>
+                                <span class="metric-badge metric-clicked" 
+                                      th:text="${entry.value.get('ad_clicked') != null ? entry.value.get('ad_clicked') : 0}">0</span>
+                            </td>
+                            <td>
+                                <span class="metric-badge metric-closed" 
+                                      th:text="${entry.value.get('ad_closed') != null ? entry.value.get('ad_closed') : 0}">0</span>
+                            </td>
+                            <td>
+                                <span th:with="views=${entry.value.get('ad_viewed') != null ? entry.value.get('ad_viewed') : 0},
+                                             clicks=${entry.value.get('ad_clicked') != null ? entry.value.get('ad_clicked') : 0}"
+                                      th:text="${views > 0 ? #numbers.formatDecimal(clicks * 100.0 / views, 1, 1) + '%' : '0.0%'}">0.0%</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div th:if="${adAnalytics == null or adAnalytics.isEmpty()}" class="no-data">
+                <p>📭 No ad interaction data available yet. Start interacting with ads to see analytics!</p>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // Event Types Chart
+        const eventTypeLabels = /*[[${eventTypeLabels}]]*/ [];
+        const eventTypeData = /*[[${eventTypeData}]]*/ [];
+
+        if (eventTypeLabels.length > 0) {
+            const ctx1 = document.getElementById('eventTypesChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: eventTypeLabels.map(label => label.replace('ad_', '').toUpperCase()),
+                    datasets: [{
+                        data: eventTypeData,
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(153, 102, 255, 0.8)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Top Ads Chart
+        const topAdLabels = /*[[${topAdLabels}]]*/ [];
+        const topAdData = /*[[${topAdData}]]*/ [];
+
+        if (topAdLabels.length > 0) {
+            const ctx2 = document.getElementById('topAdsChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: topAdLabels.map(label => label.length > 20 ? label.substring(0, 20) + '...' : label),
+                    datasets: [{
+                        label: 'Total Interactions',
+                        data: topAdData,
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
