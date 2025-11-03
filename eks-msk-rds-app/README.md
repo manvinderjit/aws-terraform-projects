@@ -1,8 +1,8 @@
 # EKS MSK RDS App - Cloud-Native Three-Tier Architecture
 
-This project demonstrates a production-ready **three-tier Kubernetes application** deployed on AWS using **Amazon EKS**, **Amazon MSK (Managed Kafka)**, and **Amazon RDS**. It showcases modern cloud-native architecture patterns with event-driven communication, infrastructure as code, and automated CI/CD deployment.
+This project demonstrates a production-ready **three-tier Kubernetes application** deployed on AWS using **Amazon EKS**, **Amazon MSK (Managed Kafka)**, and **Amazon RDS**. It showcases modern cloud-native architecture patterns with event-driven communication, infrastructure as code, automated CI/CD deployment, and comprehensive monitoring.
 
-**Application Source Code**: [react-springboot-kafka-apps](https://github.com/manvinderjit/react-springboot-kafka-apps)
+**Complete Solution**: This repository contains both the infrastructure code (Terraform) and the application source code (Java Spring Boot), providing a complete end-to-end implementation.
 
 ---
 
@@ -41,7 +41,24 @@ _Integration Diagram showing how the tiers are integrated and communicate._
 - **Data Persistence**: Events stored in MySQL database
 - **Live Updates**: Real-time UI updates through event streaming
 
+### Monitoring Stack
+
+#### Prometheus Monitoring
+
+![Prometheus Status](./images/6-prometheus-status.png)
+_Prometheus monitoring interface showing system status and targets_
+
+![Prometheus Query](./images/7-prometheus-query.png)
+_Prometheus query interface for metrics exploration and analysis_
+
+#### Grafana Dashboard
+
+![Grafana Dashboard](./images/8-grafana-dashboard.png)
+_Grafana visualization dashboard for comprehensive monitoring and alerting_
+
+
 ---
+
 
 ## Technology Stack
 
@@ -52,9 +69,10 @@ _Integration Diagram showing how the tiers are integrated and communicate._
 | **Load Balancing**          | Classic Load Balancer (ELB) | Cross-zone enabled          | External traffic distribution       |
 | **Message Streaming**       | Amazon MSK                  | Kafka 3.8.x                 | Event-driven communication          |
 | **Database**                | Amazon RDS                  | MySQL 8.0.42                | Persistent data storage             |
-| **Frontend Application**    | ThymeLeaf + Spring Boot     | Java-based                  | Server-side rendered web UI         |
-| **Backend API**             | Spring Boot + Kafka         | REST + Event streaming      | Business logic & data processing    |
+| **Frontend Application**    | ThymeLeaf + Spring Boot     | Java 17, Maven 3.x         | Server-side rendered web UI         |
+| **Backend API**             | Spring Boot + Kafka         | Java 17, Spring Boot 3.8 | Business logic & data processing    |
 | **Container Images**        | Docker                      | manvinderjit/*:v3           | Application containerization        |
+| **Monitoring Stack**        | Prometheus + Grafana        | Prometheus v2.48.0          | Metrics collection & visualization  |
 | **CI/CD Pipeline**          | GitHub Actions              | OIDC authentication         | Automated deployment & management   |
 | **State Management**        | Terraform S3 Backend        | Encrypted, locked           | Infrastructure state persistence    |
 | **Security**                | AWS IAM + Security Groups   | Least privilege             | Access control & network security   |
@@ -67,11 +85,14 @@ _Integration Diagram showing how the tiers are integrated and communicate._
 eks-msk-rds-app/
 │
 ├── images/                          # Architecture diagrams & screenshots
-│   ├── 1-3-tier-eks-msk-rds-app-infra.png
-│   ├── 2-ads-index.png
-│   ├── 3-analytics-dash-full.png
-│   ├── 3-tier-eks-msk-rds-app-traffic-flow.png
-│   └── 4-raw-event-logs.png
+│   ├── 1-3-tier-eks-msk-rds-app-infra.png     # Infrastructure architecture
+│   ├── 2-ads-index.png                        # Application main interface
+│   ├── 3-tier-eks-msk-rds-app-traffic-flow.png # Integration flow diagram
+│   ├── 4-analytics-dash-full.png              # Analytics dashboard
+│   ├── 5-raw-event-logs.png                   # Event logs display
+│   ├── 6-prometheus-status.png                # Prometheus monitoring
+│   ├── 7-prometheus-query.png                 # Prometheus queries
+│   └── 8-grafana-dashboard.png                # Grafana visualization
 │
 ├── modules/                         # Terraform modules
 │   ├── vpc/                        # VPC with multi-tier networking
@@ -98,11 +119,33 @@ eks-msk-rds-app/
 │   │   ├── 2-svc-cluster-backend.yaml     # Backend ClusterIP service
 │   │   ├── configmap.yaml                 # Backend configuration
 │   │   └── secrets.yaml                   # Backend database secrets
-│   └── frontend/                   # ThymeLeaf frontend service
-│       ├── 1-deployment-frontend.yaml     # Frontend deployment
-│       ├── 2-2-svc-cluster-frontend.yaml  # Frontend ClusterIP service
-│       ├── 3-svc-loadbalancer-frontend.yaml # Classic Load Balancer
-│       └── configmap.yaml                 # Frontend configuration
+│   ├── frontend/                   # ThymeLeaf frontend service
+│   │   ├── 1-deployment-frontend.yaml     # Frontend deployment
+│   │   ├── 2-svc-cluster-frontend.yaml    # Frontend ClusterIP service
+│   │   ├── 3-svc-loadbalancer-frontend.yaml # Classic Load Balancer
+│   │   └── configmap.yaml                 # Frontend configuration
+│   └── monitoring/                 # Prometheus & Grafana monitoring
+│       ├── namespace.yaml                 # Monitoring namespace
+│       ├── prometheus-config.yaml         # Prometheus configuration
+│       ├── prometheus-deployment.yaml     # Prometheus deployment
+│       ├── prometheus-rbac.yaml           # Prometheus RBAC
+│       ├── prometheus-loadbalancer.yaml   # Prometheus LoadBalancer
+│       ├── grafana-config.yaml            # Grafana configuration
+│       └── grafana-deployment.yaml        # Grafana deployment
+│
+├── backend/                        # Spring Boot backend application
+│   ├── src/main/java/              # Java source code
+│   ├── src/test/java/              # Unit tests
+│   ├── pom.xml                     # Maven dependencies (Spring Boot 3.8)
+│   ├── target/                     # Compiled artifacts
+│   └── mvnw                        # Maven wrapper
+│
+├── frontend/                       # Spring Boot frontend application
+│   ├── src/main/java/              # Java source code
+│   ├── src/test/java/              # Unit tests
+│   ├── pom.xml                     # Maven dependencies (Spring Boot 3.8)
+│   ├── target/                     # Compiled artifacts
+│   └── mvnw                        # Maven wrapper
 │
 ├── main.tf                         # Root Terraform configuration
 ├── provider.tf                     # AWS provider & version constraints
@@ -115,6 +158,78 @@ eks-msk-rds-app/
 .github/workflows/
 ├── eks-msk-rds-app.yaml           # Main deployment workflow
 └── eks-msk-rds-app-destroy.yaml   # Infrastructure destruction workflow
+```
+
+---
+
+## Application Components
+
+### Java Spring Boot Applications
+
+Both frontend and backend are built with **Spring Boot 3.8** and **Java 17**, providing modern enterprise-grade application development:
+
+**Backend Application** (`backend/`):
+- **Framework**: Spring Boot 3.8 with Spring Kafka integration
+- **Build Tool**: Maven 3.x with wrapper (`mvnw`)
+- **Runtime**: Java 17 (LTS)
+- **Dependencies**: Spring Web, Spring Data JPA, Spring Kafka, MySQL Connector
+- **Functionality**: REST API endpoints, Kafka message consumption/production, database operations
+- **Container Image**: `manvinderjit/kafka-project-backend:v3`
+- **Health Endpoint**: `/api/events` for readiness/liveness probes
+
+**Frontend Application** (`frontend/`):
+- **Framework**: Spring Boot 3.8 with ThymeLeaf templating
+- **Build Tool**: Maven 3.x with wrapper (`mvnw`)
+- **Runtime**: Java 17 (LTS)
+- **Dependencies**: Spring Web, ThymeLeaf, Spring Kafka
+- **Functionality**: Server-side rendered web UI, event creation forms, real-time updates
+- **Container Image**: `manvinderjit/kafka-project-frontend:v3`
+- **Health Endpoint**: `/` for readiness/liveness probes
+
+**Build Process:**
+```bash
+# Backend build (from repository root)
+cd eks-msk-rds-app/backend
+./mvnw clean package -DskipTests
+docker build -t manvinderjit/kafka-project-backend:v3 .
+
+# Frontend build (from repository root)
+cd eks-msk-rds-app/frontend
+./mvnw clean package -DskipTests
+docker build -t manvinderjit/kafka-project-frontend:v3 .
+
+# Or build both applications
+cd eks-msk-rds-app
+# Backend
+(cd backend && ./mvnw clean package -DskipTests)
+# Frontend  
+(cd frontend && ./mvnw clean package -DskipTests)
+```
+
+**Application Flow:**
+1. User interacts with ThymeLeaf frontend web interface
+2. Frontend publishes events to MSK Kafka topics
+3. Backend consumes Kafka messages and processes business logic
+4. Backend stores processed data in MySQL RDS database
+5. Real-time updates flow back through Kafka to frontend
+6. Prometheus scrapes metrics from both applications for monitoring
+
+**Local Development:**
+```bash
+# Prerequisites: Java 17, Maven 3.x
+cd eks-msk-rds-app
+
+# Run backend locally (requires local Kafka and MySQL)
+cd backend
+./mvnw spring-boot:run
+
+# Run frontend locally (in separate terminal)
+cd frontend
+./mvnw spring-boot:run
+
+# Access local application
+# Frontend: http://localhost:8081
+# Backend API: http://localhost:8080/api/events
 ```
 
 ---
@@ -304,7 +419,7 @@ kubectl apply -f k8-manifests/backend/2-svc-cluster-backend.yaml
 # Deploy frontend with environment variable substitution
 envsubst < k8-manifests/frontend/configmap.yaml | kubectl apply -f -
 kubectl apply -f k8-manifests/frontend/1-deployment-frontend.yaml
-kubectl apply -f k8-manifests/frontend/2-2-svc-cluster-frontend.yaml
+kubectl apply -f k8-manifests/frontend/2-svc-cluster-frontend.yaml
 kubectl apply -f k8-manifests/frontend/3-svc-loadbalancer-frontend.yaml
 
 # Check deployment status
@@ -313,12 +428,30 @@ kubectl get services
 kubectl get deployments
 ```
 
+**Deploy Monitoring Stack (Optional):**
+
+```bash
+# Deploy Prometheus and Grafana for monitoring
+kubectl apply -f k8-manifests/monitoring/namespace.yaml
+kubectl apply -f k8-manifests/monitoring/prometheus-rbac.yaml
+kubectl apply -f k8-manifests/monitoring/prometheus-config.yaml
+kubectl apply -f k8-manifests/monitoring/prometheus-deployment.yaml
+kubectl apply -f k8-manifests/monitoring/prometheus-loadbalancer.yaml
+kubectl apply -f k8-manifests/monitoring/grafana-config.yaml
+kubectl apply -f k8-manifests/monitoring/grafana-deployment.yaml
+
+# Check monitoring stack
+kubectl get pods -n monitoring
+kubectl get services -n monitoring
+```
+
 **Direct Deployment (requires manual ConfigMap editing):**
 
 ```bash
 # Deploy all manifests (requires pre-configured ConfigMaps)
 kubectl apply -f k8-manifests/backend/
 kubectl apply -f k8-manifests/frontend/
+kubectl apply -f k8-manifests/monitoring/  # Optional monitoring
 ```
 
 ### Step 5: Access Application
@@ -342,6 +475,8 @@ kubectl logs -l app=kafka-project-backend --tail=50
 **Application Access Points:**
 - **Frontend Web UI**: `http://<ELB-HOSTNAME>` (port 80)
 - **Backend API**: `http://service-kafka-project-backend:8080/api/events` (internal only)
+- **Prometheus Metrics**: `http://<PROMETHEUS-ELB>:9090` (if monitoring deployed)
+- **Grafana Dashboard**: `http://<GRAFANA-ELB>:3000` (if monitoring deployed)
 - **Health Checks**: 
   - Frontend: `http://<ELB-HOSTNAME>/` 
   - Backend: `http://service-kafka-project-backend:8080/api/events`
@@ -354,8 +489,16 @@ Once deployed, the application provides:
 2. **Real-time Processing**: Events are processed through Kafka and stored in MySQL
 3. **Live Updates**: Frontend displays real-time updates as events are processed
 4. **API Access**: Backend exposes REST endpoints for event management
+5. **Monitoring**: Prometheus collects metrics, Grafana provides visualization dashboards
+6. **Observability**: Application and infrastructure metrics for performance monitoring
 
-**Source Code Repository**: [react-springboot-kafka-apps](https://github.com/manvinderjit/react-springboot-kafka-apps)
+**Application Architecture:**
+- **Frontend**: Spring Boot 3.8 with ThymeLeaf templates (Java 17) - source code in `frontend/`
+- **Backend**: Spring Boot 3.8 with Kafka integration (Java 17) - source code in `backend/`
+- **Build System**: Maven with wrapper scripts for consistent builds
+- **Container Runtime**: Kubernetes deployments with resource limits and health checks
+
+**Complete Implementation**: All application source code is included in this repository, providing a complete end-to-end solution from infrastructure to application deployment.
 
 ## Application Screenshots
 
@@ -366,12 +509,12 @@ _Main application interface for event management and real-time data visualizatio
 
 ### Analytics Dashboard
 
-![Analytics Dashboard](./images/3-analytics-dash-full.png)
+![Analytics Dashboard](./images/4-analytics-dash-full.png)
 _Real-time analytics dashboard showing event processing and data insights_
 
 ### Event Logs
 
-![Raw Event Logs](./images/4-raw-event-logs.png)
+![Raw Event Logs](./images/5-raw-event-logs.png)
 _Raw event logs displaying Kafka message processing and database interactions_
 
 ---
@@ -867,9 +1010,10 @@ aws dynamodb delete-item --table-name terraform-locks --key '{"LockID":{"S":"YOU
 - EKS Cluster (~$73/month)
 - RDS Instance (~$13/month for db.t4g.micro)
 - MSK Cluster (~$90/month for 2 kafka.t3.small brokers)
-- Classic Load Balancer (~$18/month)
+- Classic Load Balancer (~$18/month + additional for monitoring if deployed)
+- EKS Worker Nodes (~$30/month for 2 t3.small instances)
 
-**Total Estimated Monthly Cost: ~$240**
+**Total Estimated Monthly Cost: ~$270** (without monitoring) / **~$290** (with monitoring)
 
 Always ensure complete cleanup to avoid unexpected charges!
 
@@ -887,9 +1031,10 @@ Always ensure complete cleanup to avoid unexpected charges!
 ### Application Architecture
 - **Cloud-Native**: Kubernetes-native deployment with container orchestration
 - **Event-Driven**: Real-time Kafka messaging between frontend and backend
-- **Microservices**: Decoupled frontend and backend services
+- **Microservices**: Decoupled frontend and backend services with Java Spring Boot
 - **Load Balancing**: Classic ELB with cross-zone load balancing
 - **Health Monitoring**: Comprehensive readiness and liveness probes
+- **Observability**: Prometheus metrics collection and Grafana visualization
 
 ### Operational Excellence
 -  **GitOps Workflow**: Automated CI/CD with GitHub Actions
@@ -908,6 +1053,9 @@ Always ensure complete cleanup to avoid unexpected charges!
 ###  Monitoring & Observability
 -  **Health Checks**: Application-level health endpoints
 - **Resource Monitoring**: Kubernetes resource requests/limits
+- **Metrics Collection**: Prometheus v2.48.0 for comprehensive metrics gathering
+- **Visualization**: Grafana dashboards for real-time monitoring and alerting
+- **Application Metrics**: Spring Boot Actuator endpoints for application insights
 -  **Infrastructure Outputs**: Comprehensive Terraform outputs for debugging
 -  **Service Discovery**: Kubernetes DNS for inter-service communication
 -  **Load Balancer Metrics**: ELB health check monitoring
@@ -916,11 +1064,14 @@ Always ensure complete cleanup to avoid unexpected charges!
 
 ##  Additional Resources
 
-- **Application Source**: [react-springboot-kafka-apps](https://github.com/manvinderjit/react-springboot-kafka-apps)
+- **Application Development**: Source code included in `backend/` and `frontend/` directories
+- **Original Reference**: Based on [react-springboot-kafka-apps](https://github.com/manvinderjit/react-springboot-kafka-apps)
 - [Amazon EKS Documentation](https://docs.aws.amazon.com/eks/)
 - [Amazon MSK Documentation](https://docs.aws.amazon.com/msk/)
 - [Kubernetes Documentation](https://kubernetes.io/docs/)
 - [Spring Boot Kafka Integration](https://spring.io/projects/spring-kafka)
+- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
+- [Maven Documentation](https://maven.apache.org/guides/)
 
 ---
 

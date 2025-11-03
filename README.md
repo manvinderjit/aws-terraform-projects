@@ -40,25 +40,31 @@ It provisions a **React-based frontend**, a **Java Spring Boot backend**, and a 
 
 ## [2. EKS MSK RDS App](eks-msk-rds-app/README.md)
 
-### **Cloud-Native Three-Tier Architecture (EKS + MSK + RDS + GitHub Actions)**
+### **Cloud-Native Three-Tier Architecture (EKS + MSK + RDS + Monitoring + GitHub Actions)**
 
 #### **Summary:**
 
 This project demonstrates a **production-ready, event-driven three-tier application** deployed on AWS using **Amazon EKS**, **Amazon MSK (Managed Kafka)**, and **Amazon RDS**. 
 
-It showcases modern cloud-native architecture patterns with **real-time event streaming**, **modular Terraform infrastructure**, **automated CI/CD pipelines**, and **comprehensive operational excellence**.
+It showcases modern cloud-native architecture patterns with **real-time event streaming**, **comprehensive monitoring stack**, **modular Terraform infrastructure**, **automated CI/CD pipelines**, and **complete operational excellence**.
 
 ![Infrastructure Architecture Diagram](./eks-msk-rds-app/images/1-3-tier-eks-msk-rds-app-infra.png)
 
 ![Integration Diagram](./eks-msk-rds-app/images/3-tier-eks-msk-rds-app-traffic-flow.png)
 
+### **Monitoring & Observability:**
 
+Complete monitoring stack with Prometheus metrics collection and Grafana visualization dashboards.
+
+![Prometheus Monitoring](./eks-msk-rds-app/images/6-prometheus-status.png)
+
+![Grafana Dashboard](./eks-msk-rds-app/images/8-grafana-dashboard.png)
 
 ### **Application Code:**
 
-The application frontend and backend are created in ThymeLeaf and Springboot.
+The application frontend and backend are created in Java Spring Boot with ThymeLeaf templating, **included in this repository**.
 
-**Application Source**: [Thymeleaf Springboot Kafka App](https://github.com/manvinderjit/react-springboot-kafka-apps)
+**Complete Solution**: All source code included in `backend/` and `frontend/` directories
 
 ### **Project Summary:**
 
@@ -69,15 +75,17 @@ The application frontend and backend are created in ThymeLeaf and Springboot.
 - **Multi-Tier Networking**: 8 subnets across 2 AZs (public, private EKS, private MSK, database) with NAT gateway and security group isolation
 - **Event Streaming**: MSK Kafka 3.8.x cluster (2 brokers) for real-time message processing between ThymeLeaf frontend and Spring Boot backend
 - **Database**: MySQL 8.0.42 RDS (db.t4g.micro) in isolated database subnets with no public access
-- **Application**: Containerized Java ThymeLeaf frontend and Spring Boot backend with health checks, resource limits, and high availability (2 replicas each)
+- **Application Stack**: Java Spring Boot 3.5.5 applications (Java 17) with ThymeLeaf frontend and REST API backend, containerized with health checks and high availability (2 replicas each)
+- **Monitoring Stack**: Prometheus v2.48.0 for metrics collection and Grafana for visualization dashboards with comprehensive observability
 - **Load Balancing**: Classic ELB with cross-zone load balancing, health checks, and external access
 - **CI/CD Pipelines**: Dual GitHub Actions workflows - automated deployment on push and manual destruction with safety confirmations
 - **Security**: OIDC authentication, least privilege IAM, network isolation, encrypted secrets, and comprehensive access controls
 
 **Key Features**: 
 - **Infrastructure Excellence**: Modular Terraform, multi-AZ deployment, cost-optimized instances, security-first design
-- **Operational Excellence**: GitOps workflows, configuration management, state management, resource monitoring
-- **Application Architecture**: Event-driven microservices, container orchestration, health monitoring, topology awareness
+- **Application Architecture**: Event-driven microservices, container orchestration, health monitoring, complete source code included
+- **Monitoring & Observability**: Prometheus metrics collection, Grafana visualization, application insights, infrastructure monitoring
+- **Operational Excellence**: GitOps workflows, configuration management, state management, comprehensive documentation
 - **Security & Compliance**: Network security, identity management, secrets management, encryption, access control
 
 ---
